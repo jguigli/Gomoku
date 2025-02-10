@@ -6,7 +6,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change "*" par "http://localhost:3000" en production
+    allow_origins=["*"],  # http://localhost:3000
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -16,8 +16,9 @@ class Move(BaseModel):
     x: int
     y: int
 
-# État du jeu (exemple simple)
-board = [[0] * 19 for _ in range(19)]  # 19x19 plateau vide
+BOARD_SIZE = 19
+board = [[0] * BOARD_SIZE for _ in range(BOARD_SIZE)]
+turn = 1  # 1 = Noir, 2 = Blanc
 
 @app.get("/board")
 def get_board():
@@ -25,7 +26,9 @@ def get_board():
 
 @app.post("/move")
 def make_move(move: Move):
-    if board[move.x][move.y] == 0:
-        board[move.x][move.y] = 1  # 1 = joueur, 2 = IA
-        return {"message": "Move played", "board": board}
-    return {"error": "Invalid move"}
+    global turn
+    if board[move.y][move.x] == 0:
+        board[move.y][move.x] = turn
+        turn = 3 - turn  # Alterner le tour
+        return {"message": "Coup joué", "board": board}
+    return {"error": "Coup invalide"}
