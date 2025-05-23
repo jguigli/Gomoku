@@ -5,6 +5,8 @@ echo "🔍 Détection du système..."
 OS="$(uname)"
 echo "Système détecté : $OS"
 
+echo "$OS"
+
 if [[ "$OS" == "Linux" ]]; then
     echo "🟢 Linux détecté"
     if ! command -v apt &> /dev/null; then

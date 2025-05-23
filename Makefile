@@ -62,7 +62,7 @@ $(NAME): $(OBJ)
 # Install part --------------------------------------------------
 
 install:
-				sh ./install_raylib.sh
+				bash ./install_raylib.sh
 
 # Clean part --------------------------------------------------
 
