@@ -1,3 +1,6 @@
+#include  <vector>
+#include <utility>
+
 int pattern_score (int count) {
     switch(count) {
         case 2: return 10;

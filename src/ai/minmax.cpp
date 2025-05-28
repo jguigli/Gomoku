@@ -19,12 +19,12 @@ int log2(int n)
     return (n==1 ? 0 : 1 + log2(n/2));
 }
 
-int main()
-{
-    int scores[] = {3, 5, 2, 9, 12, 5, 23, 23};
-    int n = sizeof(scores)/sizeof(scores[0]);
-    int h = log2(n);
-    int res = minimax(0,0,true,scores,h);
-    std::cout << "The optimal value is : " << res << std::endl;
-    return 0;
-}
+// int main()
+// {
+//     int scores[] = {3, 5, 2, 9, 12, 5, 23, 23};
+//     int n = sizeof(scores)/sizeof(scores[0]);
+//     int h = log2(n);
+//     int res = minimax(0,0,true,scores,h);
+//     std::cout << "The optimal value is : " << res << std::endl;
+//     return 0;
+// }

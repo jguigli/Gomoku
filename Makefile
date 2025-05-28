@@ -87,7 +87,7 @@ OBJ_DIR   := build
 INC_DIR   := includes
 
 # Recherche récursive des .cpp
-SRC       := $(shell find $(SRC_DIR) -name '*.cpp')
+SRC       := $(shell find $(SRC_DIR) -type f -name '*.cpp')
 OBJ       := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
 DEP       := $(OBJ:.o=.d)
 
