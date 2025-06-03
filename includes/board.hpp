@@ -1,22 +1,25 @@
-#ifndef BOARD_HPP
-#define BOARD_HPP
-
+#pragma once
 #include "raylib.h"
 #include <vector>
 
-extern const int gridSize;
-extern const int margin;
-extern const int cellSize;
+enum class Cell { EMPTY, BLACK, WHITE };
 
-enum Cell { EMPTY, CELL_BLACK, CELL_WHITE };
+class Board 
+{
+	private:
+		static constexpr int gridSize = 15;
+		static constexpr int screenSize = 800;
+		static constexpr int cellSize = screenSize / gridSize;
+		std::vector<std::vector<Cell>> grid;
 
-extern std::vector<std::vector<Cell>> board;
-extern bool playerTurn;
-
-void ResetBoard();
-bool IsInsideBoard(int x, int y);
-bool PlacePiece(int x, int y);
-void DrawBoard();
-void DrawPieces();
-
-#endif
+	public:
+		Board();
+		void drawBoard() const;
+		void drawPieces() const;
+		bool placePiece(int x, int y, Cell player);
+		void reset();
+		bool isInside(int x, int y) const;
+		Cell getCell(int x, int y) const;
+		int getGridSize() const { return gridSize; }
+		int getCellSize() const { return cellSize; }
+};

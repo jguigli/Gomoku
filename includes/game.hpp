@@ -1,12 +1,16 @@
-#ifndef GAME_HPP
-#define GAME_HPP
+#pragma once
+#include "board.hpp"
 
-
-class Board
+class Game
 {
-    public:
-    
-    private:
-};
+	private:
+		Board board;
+		bool blackTurn;
+		Rectangle resetButton;
 
-#endif
+	public:
+		Game();
+		void update();
+		void render();
+		void reset();
+};

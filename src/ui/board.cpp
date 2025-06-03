@@ -1,54 +1,64 @@
-#include "raylib.h"
 #include "../includes/board.hpp"
-#include <vector>
-#include <algorithm>
 
-const int gridSize = 19;
-const int margin = 40;
-const int cellSize = (800 - 2 * margin) / (gridSize - 1);
+Board::Board() {
+    grid.resize(gridSize, std::vector<Cell>(gridSize, Cell::EMPTY));
+}
 
-std::vector<std::vector<Cell>> board(gridSize, std::vector<Cell>(gridSize, EMPTY));
-bool playerTurn = true;
-
-void ResetBoard() {
-    for (auto &row : board) {
-        std::fill(row.begin(), row.end(), EMPTY);
+void Board::reset()
+{
+    for (auto& row : grid) {
+        std::fill(row.begin(), row.end(), Cell::EMPTY);
     }
-    playerTurn = true;
 }
 
-bool IsInsideBoard(int x, int y) {
-    return x >= 0 && x < gridSize && y >= 0 && y < gridSize;
+void Board::drawBoard() const
+{
+    for (int i = 0; i < gridSize; ++i)
+	{
+        DrawLine(i * cellSize, 0, i * cellSize, screenSize, DARKGRAY);
+        DrawLine(0, i * cellSize, screenSize, i * cellSize, DARKGRAY);
+    }
 }
 
-bool PlacePiece(int x, int y) {
-    if (IsInsideBoard(x, y) && board[y][x] == EMPTY) {
-        board[y][x] = playerTurn ? CELL_BLACK : CELL_WHITE;
-        playerTurn = !playerTurn;
+void Board::drawPieces() const
+{
+    for (int y = 0; y < gridSize; ++y)
+	{
+        for (int x = 0; x < gridSize; ++x)
+		{
+            Vector2 center = {
+                static_cast<float>(x * cellSize + cellSize / 2),
+                static_cast<float>(y * cellSize + cellSize / 2)
+            };
+            if (grid[y][x] == Cell::BLACK)
+			{
+                DrawCircleV(center, cellSize / 2.5f, BLACK);
+            }
+			else if (grid[y][x] == Cell::WHITE)
+			{
+                DrawCircleV(center, cellSize / 2.5f, RAYWHITE);
+                DrawCircleLines(center.x, center.y, cellSize / 2.5f, GRAY);
+            }
+        }
+    }
+}
+
+bool Board::placePiece(int x, int y, Cell player)
+{
+    if (isInside(x, y) && grid[y][x] == Cell::EMPTY)
+	{
+        grid[y][x] = player;
         return true;
     }
     return false;
 }
 
-void DrawBoard() {
-    for (int i = 0; i < gridSize; i++) {
-        int pos = margin + i * cellSize;
-        DrawLine(margin, pos, 800 - margin, pos, DARKGRAY);
-        DrawLine(pos, margin, pos, 800 - margin, DARKGRAY);
-    }
+bool Board::isInside(int x, int y) const
+{
+    return x >= 0 && x < gridSize && y >= 0 && y < gridSize;
 }
 
-void DrawPieces() {
-    for (int y = 0; y < gridSize; y++) {
-        for (int x = 0; x < gridSize; x++) {
-            int px = margin + x * cellSize;
-            int py = margin + y * cellSize;
-            if (board[y][x] == CELL_BLACK) {
-                DrawCircle(px, py, cellSize / 3, BLACK);
-            } else if (board[y][x] == CELL_WHITE) {
-                DrawCircle(px, py, cellSize / 3, RAYWHITE);
-                DrawCircleLines(px, py, cellSize / 3, GRAY);
-            }
-        }
-    }
+Cell Board::getCell(int x, int y) const
+{
+    return grid[y][x];
 }
