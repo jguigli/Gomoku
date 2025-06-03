@@ -21,7 +21,7 @@ int getEvaluation() {
             intBoard[y][x] = board[y][x];
     int scoreWhite = evaluate_board(intBoard, CELL_WHITE);
     int scoreBlack = evaluate_board(intBoard, CELL_BLACK);
-    return scoreBlack - scoreWhite;
+    return scoreWhite - scoreBlack;
 }
 
 int main() {
