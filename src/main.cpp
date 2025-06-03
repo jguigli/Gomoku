@@ -1,11 +1,7 @@
 #include "raylib.h"
-#include "board.hpp"
-#include <cstdio>
+#include "../includes/board.hpp"
 #include <cmath>
-#include "../includes/heuristic.hpp"
 
-const int screenWidth = 800;
-const int screenHeight = 800;
 
 extern std::vector<std::vector<Cell>> board;
 extern const int gridSize;
@@ -25,48 +21,6 @@ int getEvaluation() {
 }
 
 int main() {
-    InitWindow(screenWidth, screenHeight + 60, "Gomoku");
-    SetTargetFPS(60);
-
-    int textWidth = MeasureText("New Game", 16);
-    int textHeight = 16;
-
-    Rectangle buttonReset = { screenWidth / 2.0f - 60, screenHeight + 10, 120, 40 };
-
-    evaluatedScore = getEvaluation();
-
-    while (!WindowShouldClose()) {
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            Vector2 mouse = GetMousePosition();
-
-            if (CheckCollisionPointRec(mouse, buttonReset)) {
-                ResetBoard();
-                evaluatedScore = getEvaluation();
-            } else if (mouse.y < screenHeight) {
-                int gridX = round((mouse.x - margin) / (float)cellSize);
-                int gridY = round((mouse.y - margin) / (float)cellSize);
-                PlacePiece(gridX, gridY);
-                evaluatedScore = getEvaluation();
-            }
-        }
-
-        BeginDrawing();
-        ClearBackground(BEIGE);
-
-        DrawBoard();
-        DrawPieces();
-
-        DrawRectangleRec(buttonReset, LIGHTGRAY);
-        DrawText("New Game", buttonReset.x + (buttonReset.width - textWidth) / 2, 
-                 buttonReset.y + (buttonReset.height - textHeight) / 2, 16, DARKGRAY);
-        
-        char evalText[64];
-        snprintf(evalText, sizeof(evalText), "Evaluation: %d", evaluatedScore);
-        DrawText(evalText, buttonReset.x + buttonReset.width + 20, buttonReset.y + (buttonReset.height - textHeight) / 2, 16, DARKGRAY);
-
-        EndDrawing();
-    }
-
-    CloseWindow();
+    manageBoard();
     return 0;
 }

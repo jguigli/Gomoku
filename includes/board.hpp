@@ -18,5 +18,6 @@ bool IsInsideBoard(int x, int y);
 bool PlacePiece(int x, int y);
 void DrawBoard();
 void DrawPieces();
+void manageBoard();
 
 #endif
