@@ -95,14 +95,16 @@ UNAME_S   := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
     RAYLIBFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
     LDFLAGS = -L/usr/lib
+	IFLAGS = -I$(INC_DIR) -I/usr/include
 endif
 ifeq ($(UNAME_S),Darwin)
     RAYLIBFLAGS = -lraylib
     LDFLAGS = -L/opt/homebrew/lib -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+	IFLAGS = -I/opt/homebrew/include
 endif
 
 CFLAGS    := -std=c++20 -Wall -Wextra -Werror -g -fsanitize=address
-IFLAGS    := -I$(INC_DIR) -I/usr/include
+
 
 # Génère les dossiers nécessaires pour les .o
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
