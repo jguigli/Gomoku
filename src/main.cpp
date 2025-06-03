@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cmath>
 #include "../includes/heuristic.hpp"
+#include "../includes/minmax.hpp"
 
 const int screenWidth = 800;
 const int screenHeight = 800;
@@ -31,6 +32,8 @@ int main() {
     int textWidth = MeasureText("New Game", 16);
     int textHeight = 16;
 
+    bool iaActive = false;
+
     Rectangle buttonReset = { screenWidth / 2.0f - 60, screenHeight + 10, 120, 40 };
 
     evaluatedScore = getEvaluation();
@@ -47,6 +50,34 @@ int main() {
                 int gridY = round((mouse.y - margin) / (float)cellSize);
                 PlacePiece(gridX, gridY);
                 evaluatedScore = getEvaluation();
+            }
+        }
+        if (IsKeyPressed(KEY_I)) {
+            iaActive = !iaActive;
+        }
+        if (iaActive && !playerTurn) {
+            std::vector<std::vector<int>> intBoard(gridSize, std::vector<int>(gridSize, 0));
+            for (int y = 0; y < gridSize; ++y)
+                for (int x = 0; x < gridSize; ++x)
+                    intBoard[y][x] = board[y][x];
+
+            int bestY = -1, bestX = -1, bestScore = std::numeric_limits<int>::min();
+            int profondeur = 1;
+            Cell JoueurIA = CELL_WHITE;
+            for (auto [y, x] : generate_moves(intBoard)) {
+                intBoard[y][x] = JoueurIA;
+                int score = minimax(intBoard, profondeur, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), false, JoueurIA);
+                intBoard[y][x] = 0;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestY = y;
+                    bestX = x;
+                }
+            }
+            if (bestY != -1 && bestX != -1) {
+                board[bestY][bestX] = JoueurIA;
+                evaluatedScore = getEvaluation();
+                playerTurn = !playerTurn;
             }
         }
 
