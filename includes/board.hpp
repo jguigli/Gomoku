@@ -22,4 +22,5 @@ class Board
 		Cell getCell(int x, int y) const;
 		int getGridSize() const { return gridSize; }
 		int getCellSize() const { return cellSize; }
+		int getEvaluation();
 };

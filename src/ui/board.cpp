@@ -1,4 +1,5 @@
 #include "../includes/board.hpp"
+#include "../includes/heuristic.hpp"
 
 Board::Board() {
     grid.resize(gridSize, std::vector<Cell>(gridSize, Cell::EMPTY));
@@ -67,9 +68,9 @@ int Board::getEvaluation() {
     std::vector<std::vector<int>> intBoard(gridSize, std::vector<int>(gridSize, 0));
     for (int y = 0; y < gridSize; ++y)
         for (int x = 0; x < gridSize; ++x) {
-            if (board[y][x] == Cell::CELL_BLACK)
+            if (grid[y][x] == Cell::CELL_BLACK)
                 intBoard[y][x] = 1;
-            else if (board[y][x] == Cell::CELL_WHITE)
+            else if (grid[y][x] == Cell::CELL_WHITE)
                 intBoard[y][x] = 2;
             else
                 intBoard[y][x] = 0;
