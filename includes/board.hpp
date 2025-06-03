@@ -2,12 +2,12 @@
 #include "raylib.h"
 #include <vector>
 
-enum class Cell { EMPTY, BLACK, WHITE };
+enum class Cell { EMPTY, CELL_BLACK, CELL_WHITE };
 
 class Board 
 {
 	private:
-		static constexpr int gridSize = 15;
+		static constexpr int gridSize = 19;
 		static constexpr int screenSize = 800;
 		static constexpr int cellSize = screenSize / gridSize;
 		std::vector<std::vector<Cell>> grid;

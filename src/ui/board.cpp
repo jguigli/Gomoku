@@ -30,11 +30,11 @@ void Board::drawPieces() const
                 static_cast<float>(x * cellSize + cellSize / 2),
                 static_cast<float>(y * cellSize + cellSize / 2)
             };
-            if (grid[y][x] == Cell::BLACK)
+            if (grid[y][x] == Cell::CELL_BLACK)
 			{
                 DrawCircleV(center, cellSize / 2.5f, BLACK);
             }
-			else if (grid[y][x] == Cell::WHITE)
+			else if (grid[y][x] == Cell::CELL_WHITE)
 			{
                 DrawCircleV(center, cellSize / 2.5f, RAYWHITE);
                 DrawCircleLines(center.x, center.y, cellSize / 2.5f, GRAY);
@@ -61,4 +61,20 @@ bool Board::isInside(int x, int y) const
 Cell Board::getCell(int x, int y) const
 {
     return grid[y][x];
+}
+
+int Board::getEvaluation() {
+    std::vector<std::vector<int>> intBoard(gridSize, std::vector<int>(gridSize, 0));
+    for (int y = 0; y < gridSize; ++y)
+        for (int x = 0; x < gridSize; ++x) {
+            if (board[y][x] == Cell::CELL_BLACK)
+                intBoard[y][x] = 1;
+            else if (board[y][x] == Cell::CELL_WHITE)
+                intBoard[y][x] = 2;
+            else
+                intBoard[y][x] = 0;
+        }
+    int scoreWhite = evaluate_board(intBoard, 2);
+    int scoreBlack = evaluate_board(intBoard, 1);
+    return scoreWhite - scoreBlack;
 }

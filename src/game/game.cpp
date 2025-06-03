@@ -13,12 +13,12 @@ void Game::reset()
 
 bool Game::checkFiveStoneAligned()
 {
-
+    return true;
 }
 
 bool Game::checkCapturePair()
 {
-
+    return true;
 }
 
 void Game::update()
@@ -30,7 +30,7 @@ void Game::update()
         } else if (mouse.y < 800) {
             int x = mouse.x / board.getCellSize();
             int y = mouse.y / board.getCellSize();
-            Cell currentPlayer = blackTurn ? Cell::BLACK : Cell::WHITE;
+            Cell currentPlayer = blackTurn ? Cell::CELL_BLACK : Cell::CELL_WHITE;
             if (board.placePiece(x, y, currentPlayer)) {
                 blackTurn = !blackTurn;
             }
@@ -39,7 +39,7 @@ void Game::update()
 }
 
 void Game::render() {
-    board.draw();
+    board.drawBoard();
     board.drawPieces();
 
     DrawRectangleRec(resetButton, LIGHTGRAY);

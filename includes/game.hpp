@@ -13,4 +13,6 @@ class Game
 		void update();
 		void render();
 		void reset();
+		bool checkFiveStoneAligned();
+		bool checkCapturePair();
 };
