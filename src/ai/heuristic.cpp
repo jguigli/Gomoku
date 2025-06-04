@@ -1,26 +1,23 @@
-#include <vector>
-#include <utility>
-#include <algorithm>
-#include <iostream>
+#include "../includes/heuristic.hpp"
 
 int pattern_score(int count, int openEnds) {
     switch (count) {
         case 2:
             switch (openEnds) {
                 case 2: return 100;
-                case 1: return 10;
+                case 1: return -50;
                 default: return 0;
             }
         case 3:
             switch (openEnds) {
                 case 2: return 1000;
-                case 1: return 100;
+                case 1: return -20000;
                 default: return 0;
             }
         case 4:
             switch (openEnds) {
                 case 2: return 10000;
-                case 1: return 1000;
+                case 1: return -1000;
                 default: return 0;
             }
         case 5:

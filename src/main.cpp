@@ -1,9 +1,7 @@
 #include "raylib.h"
-#include "board.hpp"
 #include <cstdio>
 #include <cmath>
-#include "../includes/heuristic.hpp"
-#include "../includes/minmax.hpp"
+#include "../includes/ai.hpp"
 
 const int screenWidth = 800;
 const int screenHeight = 800;
@@ -14,6 +12,8 @@ extern const int margin;
 extern const int cellSize;
 
 int evaluatedScore = 0;
+auto turnStart = std::chrono::high_resolution_clock::now();
+float elapsedMs = 0.0f;
 
 int getEvaluation() {
     std::vector<std::vector<int>> intBoard(gridSize, std::vector<int>(gridSize, 0));
@@ -39,45 +39,65 @@ int main() {
     evaluatedScore = getEvaluation();
 
     while (!WindowShouldClose()) {
+
+        auto now = std::chrono::high_resolution_clock::now();
+        elapsedMs = std::chrono::duration<float, std::milli>(now - turnStart).count();
+
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             Vector2 mouse = GetMousePosition();
 
             if (CheckCollisionPointRec(mouse, buttonReset)) {
                 ResetBoard();
                 evaluatedScore = getEvaluation();
+                turnStart = std::chrono::high_resolution_clock::now();
             } else if (mouse.y < screenHeight) {
                 int gridX = round((mouse.x - margin) / (float)cellSize);
                 int gridY = round((mouse.y - margin) / (float)cellSize);
                 PlacePiece(gridX, gridY);
                 evaluatedScore = getEvaluation();
+                printf ("Human player took %.0f ms\n", elapsedMs);
+                turnStart = std::chrono::high_resolution_clock::now();
             }
         }
         if (IsKeyPressed(KEY_I)) {
             iaActive = !iaActive;
         }
         if (iaActive && !playerTurn) {
-            std::vector<std::vector<int>> intBoard(gridSize, std::vector<int>(gridSize, 0));
-            for (int y = 0; y < gridSize; ++y)
-                for (int x = 0; x < gridSize; ++x)
-                    intBoard[y][x] = board[y][x];
+            // std::vector<std::vector<int>> intBoard(gridSize, std::vector<int>(gridSize, 0));
+            // for (int y = 0; y < gridSize; ++y)
+            //     for (int x = 0; x < gridSize; ++x)
+            //         intBoard[y][x] = board[y][x];
 
-            int bestY = -1, bestX = -1, bestScore = std::numeric_limits<int>::min();
-            int profondeur = 1;
+            // int bestY = -1, bestX = -1, bestScore = std::numeric_limits<int>::min();
+            // int profondeur = 1;
+            // Cell JoueurIA = CELL_WHITE;
+            // for (auto [y, x] : generate_moves(intBoard)) {
+            //     intBoard[y][x] = JoueurIA;
+            //     int score = minimax(intBoard, profondeur, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), true, JoueurIA, JoueurIA);
+            //     intBoard[y][x] = 0;
+            //     if (score > bestScore) {
+            //         bestScore = score;
+            //         bestY = y;
+            //         bestX = x;
+            //     }
+            // }
+            // auto iaNow = std::chrono::high_resolution_clock::now();
+            // float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
+            // if (bestY != -1 && bestX != -1) {
+            //     board[bestY][bestX] = JoueurIA;
+            //     evaluatedScore = getEvaluation();
+            //     playerTurn = !playerTurn;
+            //     printf ("AI took %.0f ms\n", iaElapsedMs);
+            //     turnStart = std::chrono::high_resolution_clock::now();
+            // }
+            int profondeur = 3;
             Cell JoueurIA = CELL_WHITE;
-            for (auto [y, x] : generate_moves(intBoard)) {
-                intBoard[y][x] = JoueurIA;
-                int score = minimax(intBoard, profondeur, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), false, JoueurIA);
-                intBoard[y][x] = 0;
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestY = y;
-                    bestX = x;
-                }
-            }
-            if (bestY != -1 && bestX != -1) {
-                board[bestY][bestX] = JoueurIA;
+            AIMoveResult result = play_ai_turn(board, profondeur, JoueurIA);
+            if (result.movePlayed) {
                 evaluatedScore = getEvaluation();
                 playerTurn = !playerTurn;
+                printf("AI took %.0f ms\n", result.elapsedMs);
+                turnStart = std::chrono::high_resolution_clock::now();
             }
         }
 
@@ -86,6 +106,10 @@ int main() {
 
         DrawBoard();
         DrawPieces();
+
+        char timerText[32];
+        snprintf(timerText, sizeof(timerText), "Timer: %.0f ms", elapsedMs);
+        DrawText(timerText, 20, screenHeight + 20, 20, DARKGRAY);
 
         DrawRectangleRec(buttonReset, LIGHTGRAY);
         DrawText("New Game", buttonReset.x + (buttonReset.width - textWidth) / 2, 

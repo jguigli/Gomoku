@@ -1,10 +1,4 @@
 #include "../includes/minmax.hpp"
-#include "../includes/heuristic.hpp"
-#include <iostream>
-#include <algorithm>
-#include <bits/stdc++.h>
-#include <vector>
-#include <limits>
 
 // int minimax(int depth, int nodeIndex, bool isMax, int scores[], int h)
 // {
@@ -35,7 +29,7 @@
 
 std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<int>>& board) {
     int SIZE = board.size();
-    int margin = 2;
+    int margin = 1;
     std::set<std::pair<int, int>> moves;
     std::vector<std::pair<int, int>> stones;
 
@@ -61,7 +55,7 @@ std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<in
     return std::vector<std::pair<int, int>>(moves.begin(), moves.end());
 }
 
-int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta, bool maximizingPlayer, int player) {
+int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta, bool maximizingPlayer, int player, int currentPlayer) {
     if (depth == 0 || generate_moves(board).empty()) {
         return evaluate_board(board, player);
     }
@@ -69,8 +63,8 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     if (maximizingPlayer) {
         int maxEval = std::numeric_limits<int>::min();
         for (auto [y, x] : generate_moves(board)) {
-            board[y][x] = player;
-            int eval = minimax(board, depth - 1, alpha, beta, false, player == 1 ? 2 : 1);
+            board[y][x] = currentPlayer;
+            int eval = minimax(board, depth - 1, alpha, beta, false, player, 3 - currentPlayer);
             board[y][x] = 0;
             maxEval = std::max(maxEval, eval);
             alpha = std::max(alpha, eval);
@@ -81,8 +75,8 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     } else {
         int minEval = std::numeric_limits<int>::max();
         for (auto [y, x] : generate_moves(board)) {
-            board[y][x] = player;
-            int eval = minimax(board, depth - 1, alpha, beta, true, player == 1 ? 2 : 1);
+            board[y][x] = currentPlayer;
+            int eval = minimax(board, depth - 1, alpha, beta, true, player, 3 - currentPlayer);
             board[y][x] = 0;
             minEval = std::min(minEval, eval);
             beta = std::min(beta, eval);
