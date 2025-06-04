@@ -1,9 +1,12 @@
-#include "../includes/game.hpp"
+#include "../../includes/game.hpp"
+
 
 Game::Game() : blackTurn(true)
 {
-    resetButton = { 320, 810, 160, 40 };
+    resetButton = { BOARD_WIDTH / 2 - 60, BOARD_HEIGHT - 25, 120, 40 };
 }
+
+Game::~Game() {}
 
 void Game::reset()
 {
@@ -13,32 +16,37 @@ void Game::reset()
 
 bool Game::checkFiveStoneAligned()
 {
-    return true;
+    return true; ///////////////////////
 }
 
 bool Game::checkCapturePair()
 {
-    return true;
+    return true; ///////////////////////
 }
 
 void Game::update()
 {
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
         Vector2 mouse = GetMousePosition();
-        if (CheckCollisionPointRec(mouse, resetButton)) {
+        if (CheckCollisionPointRec(mouse, resetButton))
+        {
             reset();
-        } else if (mouse.y < 800) {
-            int x = mouse.x / board.getCellSize();
-            int y = mouse.y / board.getCellSize();
-            Cell currentPlayer = blackTurn ? Cell::CELL_BLACK : Cell::CELL_WHITE;
-            if (board.placePiece(x, y, currentPlayer)) {
+        }
+        else if (mouse.y < BOARD_HEIGHT)
+        {
+            int x = round((mouse.x - BOARD_MARGIN) / (float)CELL_SIZE);
+            int y = round((mouse.y - BOARD_MARGIN) / (float)CELL_SIZE);
+
+            Cell currentPlayer = blackTurn ? CELL_BLACK : CELL_WHITE;
+            if (board.placePiece(x, y, currentPlayer))
                 blackTurn = !blackTurn;
-            }
         }
     }
 }
 
-void Game::render() {
+void Game::render()
+{
     board.drawBoard();
     board.drawPieces();
 
