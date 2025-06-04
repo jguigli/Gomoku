@@ -1,6 +1,7 @@
 #pragma once
 #include "board.hpp"
 #include "config.hpp"
+#include "player.hpp"
 
 class Game
 {
@@ -10,11 +11,13 @@ class Game
 		void update();
 		void render();
 		void reset();
-		bool checkFiveStoneAligned();
-		bool checkCapturePair();
+		bool checkFiveStonesAligned(int x, int y, Player stone);
+		bool checkCapturePair(int x, int y, Player stone);
 
 	private:
-		Board board;
-		bool blackTurn;
-		Rectangle resetButton;
+		Board _board;
+		bool _blackTurn;
+		Player _blackStone;
+		Player _whiteStone;
+		Rectangle _resetButton;
 };

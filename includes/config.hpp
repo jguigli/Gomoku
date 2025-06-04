@@ -1,5 +1,7 @@
 #pragma once
 
+enum Cell { CELL_EMPTY, CELL_BLACK, CELL_WHITE };
+
 constexpr int SCREEN_WIDTH = 800;
 constexpr int SCREEN_HEIGHT = 850;
 

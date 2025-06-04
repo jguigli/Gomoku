@@ -1,9 +1,9 @@
 #pragma once
 #include "raylib.h"
 #include "config.hpp"
+#include "player.hpp"
+#include <iostream>
 #include <vector>
-
-enum Cell { CELL_EMPTY, CELL_BLACK, CELL_WHITE };
 
 class Board 
 {	
@@ -12,13 +12,13 @@ class Board
 		~Board();
 		void drawBoard() const;
 		void drawPieces() const;
-		bool placePiece(int x, int y, Cell player);
+		bool placePiece(int x, int y, Player player);
 		void reset();
 		bool isInsideGrid(int x, int y) const;
 		Cell getCell(int x, int y) const;
+		void emptyCell(int x, int y);
 		int getEvaluation();
 
 	private:
-		std::vector<std::vector<Cell>> grid;
-		// bool playerTurn;
+		std::vector<std::vector<Cell>> _grid;
 };
