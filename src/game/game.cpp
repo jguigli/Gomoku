@@ -122,8 +122,8 @@ void Game::update()
         }
         else if (mouse.y < BOARD_HEIGHT)
         {
-            int x = round((mouse.x - BOARD_MARGIN) / (float)CELL_SIZE);
-            int y = round((mouse.y - BOARD_MARGIN) / (float)CELL_SIZE);
+            int x = round((mouse.x - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
+            int y = round((mouse.y - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
 
             Player currentPlayer = _blackTurn ? _blackStone : _whiteStone;
             if (_board.placePiece(x, y, currentPlayer))
