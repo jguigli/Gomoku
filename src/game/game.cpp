@@ -165,7 +165,7 @@ void Game::update()
         if (result.movePlayed)
         {
              _iaElapsedMs = result.elapsedMs;
-            std::cout << "AI player took : " << (int)_iaElapsedMs << " ms to play" << std::endl;
+            std::cout << "AI took : " << (int)_iaElapsedMs << " ms to play" << std::endl;
             _board.placePiece(result.x, result.y, _whiteStone);
             if (checkFiveStonesAligned(result.x, result.y, _whiteStone))
             {
