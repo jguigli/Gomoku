@@ -90,7 +90,7 @@ int main() {
             //     printf ("AI took %.0f ms\n", iaElapsedMs);
             //     turnStart = std::chrono::high_resolution_clock::now();
             // }
-            int profondeur = 3;
+            int profondeur = 2;
             Cell JoueurIA = CELL_WHITE;
             AIMoveResult result = play_ai_turn(board, profondeur, JoueurIA);
             if (result.movePlayed) {
