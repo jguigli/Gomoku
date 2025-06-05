@@ -4,14 +4,14 @@
 
 Board::Board()
 {
-    grid.resize(GRID_SIZE, std::vector<Cell>(GRID_SIZE, CELL_EMPTY));
+    _grid.resize(GRID_SIZE, std::vector<Cell>(GRID_SIZE, CELL_EMPTY));
 }
 
 Board::~Board() {}
 
 void Board::reset()
 {
-    for (auto& row : grid)
+    for (auto& row : _grid)
     {
         std::fill(row.begin(), row.end(), CELL_EMPTY);
     }
@@ -35,11 +35,11 @@ void Board::drawPieces() const
         {
             int px = BOARD_MARGIN + x * CELL_SIZE;
             int py = BOARD_MARGIN + y * CELL_SIZE;
-            if (grid[y][x] == CELL_BLACK)
+            if (_grid[y][x] == CELL_BLACK)
             {
                 DrawCircle(px, py, CELL_SIZE / 3, BLACK);
             }
-            else if (grid[y][x] == CELL_WHITE)
+            else if (_grid[y][x] == CELL_WHITE)
             {
                 DrawCircle(px, py, CELL_SIZE / 3, RAYWHITE);
                 DrawCircleLines(px, py, CELL_SIZE / 3, GRAY);
@@ -48,12 +48,19 @@ void Board::drawPieces() const
     }
 }
 
-bool Board::placePiece(int x, int y, Cell player)
+bool Board::placePiece(int x, int y, Player stone)
 {
-    if (isInsideGrid(x, y) && grid[y][x] == CELL_EMPTY)
+    if (isInsideGrid(x, y) && _grid[y][x] == CELL_EMPTY)
     {
-        grid[y][x] = player;
-        // togglePlayer();
+        _grid[y][x] = stone.getStoneColor();
+        
+        // for (auto& row : _grid)
+        // {
+        //     for (int y = 0; y < 19; ++y)
+        //         std::cout << row[y];
+        //     std::cout << std::endl;
+        // }
+
         return true;
     }
     return false;
@@ -66,7 +73,13 @@ bool Board::isInsideGrid(int x, int y) const
 
 Cell Board::getCell(int x, int y) const
 {
-    return grid[y][x];
+    return _grid[y][x];
+}
+
+void Board::emptyCell(int x, int y)
+{
+    if (isInsideGrid(x, y))
+        _grid[y][x] = CELL_EMPTY;
 }
 
 
@@ -78,9 +91,9 @@ int Board::getEvaluation()
     {
         for (int x = 0; x < GRID_SIZE; ++x)
         {
-            if (grid[y][x] == CELL_BLACK)
+            if (_grid[y][x] == CELL_BLACK)
                 intBoard[y][x] = 1;
-            else if (grid[y][x] == CELL_WHITE)
+            else if (_grid[y][x] == CELL_WHITE)
                 intBoard[y][x] = 2;
             else
                 intBoard[y][x] = 0;
