@@ -2,6 +2,7 @@
 #include "board.hpp"
 #include "config.hpp"
 #include "player.hpp"
+#include "agent.hpp"
 
 class Game
 {
@@ -20,4 +21,6 @@ class Game
 		Player _blackStone;
 		Player _whiteStone;
 		Rectangle _resetButton;
+		Agent* _agent;
+		bool _agentActive;
 };

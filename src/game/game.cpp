@@ -1,12 +1,15 @@
 #include "../../includes/game.hpp"
 
 
-Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE)
+Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false)
 {
     _resetButton = { BOARD_WIDTH / 2 - 60, BOARD_HEIGHT - 25, 120, 40 };
+    _agent = new Agent(2, CELL_WHITE);
 }
 
-Game::~Game() {}
+Game::~Game() {
+    delete _agent;
+}
 
 void Game::reset()
 {
@@ -113,6 +116,8 @@ bool Game::checkCapturePair(int x, int y, Player stone)
 
 void Game::update()
 {
+
+    
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
         Vector2 mouse = GetMousePosition();
@@ -124,7 +129,7 @@ void Game::update()
         {
             int x = round((mouse.x - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
             int y = round((mouse.y - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
-
+            
             Player currentPlayer = _blackTurn ? _blackStone : _whiteStone;
             if (_board.placePiece(x, y, currentPlayer))
             {
@@ -132,7 +137,7 @@ void Game::update()
                 {
                     std::cout << "GAME OVER" << std::endl;
                 }
-
+                
                 checkCapturePair(x, y, currentPlayer);
                 if (currentPlayer.getPairCaptured() >= 5)
                 {
@@ -140,6 +145,29 @@ void Game::update()
                 }
                 _blackTurn = !_blackTurn;
             }
+        }
+    }
+
+    if (IsKeyPressed(KEY_I))
+        _agentActive = !_agentActive;
+
+    if (_agentActive && !_blackTurn)
+    {
+        auto boardVec = _board.getGrid();
+        auto result = _agent->play(boardVec);
+        if (result.movePlayed)
+        {
+            _board.placePiece(result.x, result.y, _whiteStone);
+            if (checkFiveStonesAligned(result.x, result.y, _whiteStone))
+            {
+                std::cout << "GAME OVER" << std::endl;
+            }
+            checkCapturePair(result.x, result.y, _whiteStone);
+            if (_whiteStone.getPairCaptured() >= 5)
+            {
+                std::cout << "GAME OVER" << std::endl;
+            }
+            _blackTurn = !_blackTurn;
         }
     }
 }
@@ -151,4 +179,8 @@ void Game::render()
 
     DrawRectangleRec(_resetButton, LIGHTGRAY);
     DrawText("New Game", _resetButton.x + 10, _resetButton.y + 10, 18, DARKGRAY);
+    int evaluatedScore = _board.getEvaluation();
+    char evalText[64];
+    snprintf(evalText, sizeof(evalText), "Evaluation: %d", evaluatedScore);
+    DrawText(evalText, _resetButton.x + _resetButton.width + 20, _resetButton.y + (_resetButton.height - 16) / 2, 16, DARKGRAY);
 }

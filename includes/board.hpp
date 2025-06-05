@@ -18,6 +18,7 @@ class Board
 		Cell getCell(int x, int y) const;
 		void emptyCell(int x, int y);
 		int getEvaluation();
+		const std::vector<std::vector<Cell>>& getGrid() const;
 
 	private:
 		std::vector<std::vector<Cell>> _grid;

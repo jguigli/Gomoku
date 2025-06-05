@@ -105,3 +105,8 @@ int Board::getEvaluation()
 
     return scoreWhite - scoreBlack;
 }
+
+const std::vector<std::vector<Cell>>& Board::getGrid() const
+{
+    return _grid;
+}

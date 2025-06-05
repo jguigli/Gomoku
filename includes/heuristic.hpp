@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <utility>
+#include <algorithm>
+#include <iostream>
 
 int pattern_score(int count);
 
