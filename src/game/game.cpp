@@ -5,6 +5,7 @@ Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE
 {
     _resetButton = { BOARD_WIDTH / 2 - 60, BOARD_HEIGHT - 25, 120, 40 };
     _agent = new Agent(2, CELL_WHITE);
+    _turnStartTime = std::chrono::high_resolution_clock::now();
 }
 
 Game::~Game() {
@@ -17,6 +18,7 @@ void Game::reset()
     _blackTurn = true;
     _blackStone.resetPairCaptured();
     _whiteStone.resetPairCaptured();
+    _turnStartTime = std::chrono::high_resolution_clock::now();
 }
 
 bool Game::checkFiveStonesAligned(int x, int y, Player stone)
@@ -133,6 +135,10 @@ void Game::update()
             Player currentPlayer = _blackTurn ? _blackStone : _whiteStone;
             if (_board.placePiece(x, y, currentPlayer))
             {
+                auto now = std::chrono::high_resolution_clock::now();
+                _elapsedMs = std::chrono::duration<float, std::milli>(now - _turnStartTime).count();
+                _turnStartTime = now;
+                std::cout << "Human player took : " << (int)_elapsedMs << " ms to play" << std::endl;
                 if (checkFiveStonesAligned(x, y, currentPlayer))
                 {
                     std::cout << "GAME OVER" << std::endl;
@@ -144,6 +150,7 @@ void Game::update()
                     std::cout << "GAME OVER" << std::endl;
                 }
                 _blackTurn = !_blackTurn;
+                _turnStartTime = std::chrono::high_resolution_clock::now();
             }
         }
     }
@@ -157,6 +164,8 @@ void Game::update()
         auto result = _agent->play(boardVec);
         if (result.movePlayed)
         {
+             _iaElapsedMs = result.elapsedMs;
+            std::cout << "AI player took : " << (int)_iaElapsedMs << " ms to play" << std::endl;
             _board.placePiece(result.x, result.y, _whiteStone);
             if (checkFiveStonesAligned(result.x, result.y, _whiteStone))
             {
@@ -168,6 +177,7 @@ void Game::update()
                 std::cout << "GAME OVER" << std::endl;
             }
             _blackTurn = !_blackTurn;
+             _turnStartTime = std::chrono::high_resolution_clock::now();
         }
     }
 }
@@ -178,9 +188,22 @@ void Game::render()
     _board.drawPieces();
 
     DrawRectangleRec(_resetButton, LIGHTGRAY);
-    DrawText("New Game", _resetButton.x + 10, _resetButton.y + 10, 18, DARKGRAY);
+    int fontSize = 18;
+    const char* btnText = "New Game";
+    int textWidth = MeasureText(btnText, fontSize);
+    int textHeight = fontSize;
+    int textX = _resetButton.x + (_resetButton.width - textWidth) / 2;
+    int textY = _resetButton.y + (_resetButton.height - textHeight) / 2;
+    DrawText(btnText, textX, textY, fontSize, DARKGRAY);
+    
     int evaluatedScore = _board.getEvaluation();
     char evalText[64];
     snprintf(evalText, sizeof(evalText), "Evaluation: %d", evaluatedScore);
     DrawText(evalText, _resetButton.x + _resetButton.width + 20, _resetButton.y + (_resetButton.height - 16) / 2, 16, DARKGRAY);
+    
+    auto now = std::chrono::high_resolution_clock::now();
+    float timerMs = std::chrono::duration<float, std::milli>(now - _turnStartTime).count();
+    char timerText[64];
+    snprintf(timerText, sizeof(timerText), "Timer: %.0f ms", timerMs);
+    DrawText(timerText, 10, BOARD_HEIGHT + 10, 20, MAROON);
 }

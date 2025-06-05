@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "player.hpp"
 #include "agent.hpp"
+#include <chrono>
 
 class Game
 {
@@ -23,4 +24,7 @@ class Game
 		Rectangle _resetButton;
 		Agent* _agent;
 		bool _agentActive;
+		std::chrono::time_point<std::chrono::high_resolution_clock> _turnStartTime;
+		float _elapsedMs = 0.0f;
+		float _iaElapsedMs = 0.0f;
 };
