@@ -13,6 +13,7 @@ class Game
 		void reset();
 		bool checkFiveStonesAligned(int x, int y, Player stone);
 		bool checkCapturePair(int x, int y, Player stone);
+		bool checkDoubleFreeThree(int x, int y, Player stone);
 
 	private:
 		Board _board;
@@ -20,4 +21,13 @@ class Game
 		Player _blackStone;
 		Player _whiteStone;
 		Rectangle _resetButton;
+
+		const int directions[4][2] = {
+			{1, 0},   // horizontal →
+			{0, 1},   // vertical ↓
+			{1, 1},   // diagonal ↘
+			{1, -1}   // diagonal ↗
+		};
+
+		bool spotFreeThreePattern(int x, int y, int dx, int dy, Player stone);
 };

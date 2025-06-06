@@ -18,22 +18,15 @@ void Game::reset()
 
 bool Game::checkFiveStonesAligned(int x, int y, Player stone)
 {
-    const int directions[4][2] = {
-        {1, 0},   // horizontal
-        {0, 1},   // vertical
-        {1, 1},   // diagonal gauche droite
-        {1, -1}   // diagonal droite gauche
-    };
-
-    for (auto& dir : directions)
+    for (auto& direction : directions)
     {
         int count = 1;
 
         // FORWARD
         for (int i = 1; i < 5; ++i)
         {
-            int nx = x + dir[0] * i;
-            int ny = y + dir[1] * i;
+            int nx = x + direction[0] * i;
+            int ny = y + direction[1] * i;
             if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == stone.getStoneColor())
                 count++;
             else
@@ -43,8 +36,8 @@ bool Game::checkFiveStonesAligned(int x, int y, Player stone)
         // BACKWARD
         for (int i = 1; i < 5; ++i)
         {
-            int nx = x - dir[0] * i;
-            int ny = y - dir[1] * i;
+            int nx = x - direction[0] * i;
+            int ny = y - direction[1] * i;
             if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == stone.getStoneColor())
                 count++;
             else
@@ -59,30 +52,23 @@ bool Game::checkFiveStonesAligned(int x, int y, Player stone)
 
 bool Game::checkCapturePair(int x, int y, Player stone)
 {
-    const int directions[4][2] = {
-        {1, 0},   // horizontal
-        {0, 1},   // vertical
-        {1, 1},   // diagonal gauche droite
-        {1, -1}   // diagonal droite gauche
-    };
-
     Cell opponentStone = stone.getStoneColor() == CELL_BLACK ? CELL_WHITE : CELL_BLACK;
 
-    for (auto& dir : directions)
+    for (auto& direction : directions)
     {
         int count = 0;
 
         // FORWARD
         for (int i = 1; i < 4; ++i)
         {
-            int nx = x + dir[0] * i;
-            int ny = y + dir[1] * i;
+            int nx = x + direction[0] * i;
+            int ny = y + direction[1] * i;
             if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == opponentStone)
                 count++;
             else if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == stone.getStoneColor() && count == 2)
             {
-                _board.emptyCell(x + dir[0] * (i - 1), y + dir[1] * (i - 1));
-                _board.emptyCell(x + dir[0] * (i - 2), y + dir[1] * (i - 2));
+                _board.emptyCell(x + direction[0] * (i - 1), y + direction[1] * (i - 1));
+                _board.emptyCell(x + direction[0] * (i - 2), y + direction[1] * (i - 2));
                 stone.addCapturedPair();
                 return true;
             }
@@ -93,14 +79,14 @@ bool Game::checkCapturePair(int x, int y, Player stone)
         // BACKWARD
         for (int i = 1; i < 5; ++i)
         {
-            int nx = x - dir[0] * i;
-            int ny = y - dir[1] * i;
+            int nx = x - direction[0] * i;
+            int ny = y - direction[1] * i;
             if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == opponentStone)
                 count++;
             else if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == stone.getStoneColor() && count == 2)
             {
-                _board.emptyCell(x - dir[0] * (i - 1), y - dir[1] * (i - 1));
-                _board.emptyCell(x - dir[0] * (i - 2), y - dir[1] * (i - 2));
+                _board.emptyCell(x - direction[0] * (i - 1), y - direction[1] * (i - 1));
+                _board.emptyCell(x - direction[0] * (i - 2), y - direction[1] * (i - 2));
                 stone.addCapturedPair();
                 return true;
             }
@@ -109,6 +95,59 @@ bool Game::checkCapturePair(int x, int y, Player stone)
         }
     }
     return false;
+}
+
+
+bool Game::spotFreeThreePattern(int x, int y, int dx, int dy, Player stone)
+{
+	std::string pattern;
+	const std::vector<std::string> validPatterns = {
+		"_OOO_", "_O_OO_", "_OO_O_",
+	};
+
+	for (int i = -4; i <= 4; ++i)
+	{
+		int nx = x + i * dx;
+		int ny = y + i * dy;
+
+		if (!_board.isInsideGrid(nx, ny))
+			continue;
+
+		if (nx == x && ny == y)
+		{
+			pattern += "O";
+			continue;
+		}
+
+		Cell pos = _board.getCell(nx, ny);
+		if (pos == CELL_EMPTY)
+			pattern += "_";
+		else if (pos == stone.getStoneColor())
+			pattern += "O";
+	}
+
+	for (const auto& p : validPatterns)
+	{
+		if (pattern.find(p) != std::string::npos)
+			return true;
+	}
+
+	return false;
+}
+
+bool Game::checkDoubleFreeThree(int x, int y, Player stone) {
+	if (!_board.isInsideGrid(x, y))
+		return false;
+
+	int count = 0;
+
+	for (auto& direction : directions)
+	{
+		if (spotFreeThreePattern(x, y, direction[0], direction[1], stone))
+			count++;
+	}
+
+	return count >= 2;
 }
 
 void Game::update()
@@ -126,19 +165,23 @@ void Game::update()
             int y = round((mouse.y - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
 
             Player currentPlayer = _blackTurn ? _blackStone : _whiteStone;
-            if (_board.placePiece(x, y, currentPlayer))
+            if (!checkDoubleFreeThree(x, y, currentPlayer)) // mauvaise position, car un joueur peut double freethree si il capture une pair
             {
-                if (checkFiveStonesAligned(x, y, currentPlayer))
+                if (_board.placePiece(x, y, currentPlayer))
                 {
-                    std::cout << "GAME OVER" << std::endl;
+                    if (checkFiveStonesAligned(x, y, currentPlayer))
+                    {
+                        std::cout << "GAME OVER" << std::endl;
+                        // rajouter le fait qu'une pair peut etre capturé avant la fin
+                    }
+    
+                    checkCapturePair(x, y, currentPlayer);
+                    if (currentPlayer.getPairCaptured() >= 5)
+                    {
+                        std::cout << "GAME OVER" << std::endl;
+                    }
+                    _blackTurn = !_blackTurn;
                 }
-
-                checkCapturePair(x, y, currentPlayer);
-                if (currentPlayer.getPairCaptured() >= 5)
-                {
-                    std::cout << "GAME OVER" << std::endl;
-                }
-                _blackTurn = !_blackTurn;
             }
         }
     }
