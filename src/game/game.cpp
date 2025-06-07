@@ -111,7 +111,10 @@ bool Game::spotFreeThreePattern(int x, int y, int dx, int dy, Player stone)
 		int ny = y + i * dy;
 
 		if (!_board.isInsideGrid(nx, ny))
+		{
+			pattern += "X";
 			continue;
+		}
 
 		if (nx == x && ny == y)
 		{
@@ -124,6 +127,8 @@ bool Game::spotFreeThreePattern(int x, int y, int dx, int dy, Player stone)
 			pattern += "_";
 		else if (pos == stone.getStoneColor())
 			pattern += "O";
+		else
+			pattern += "X";
 	}
 
 	for (const auto& p : validPatterns)
