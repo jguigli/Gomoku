@@ -3,6 +3,7 @@
 #include "../includes/game.hpp"
 #include "../includes/heuristic.hpp"
 #include "../includes/config.hpp"
+#include "../includes/ai.hpp"
 #include <cmath>
 
 
