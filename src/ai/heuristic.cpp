@@ -1,5 +1,15 @@
 #include "../includes/heuristic.hpp"
 
+
+static std::unordered_map<std::string, int> pattern_table = {
+    {"11111", 1000000},
+    {"011110", 10000},
+    {"011100", 1000},
+    {"001110", 1000},
+    {"011010", 1000},
+    {"010110", 1000},
+};
+
 int pattern_score(int count, int openEnds) {
     switch (count) {
         case 2:
@@ -88,7 +98,7 @@ int detect_gap_patterns(const std::vector<std::vector<int>>& board, int player, 
 int evaluate_player(const std::vector<std::vector<int>>& board, int player) {
     int score = 0;
     const int SIZE = board.size();
-    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{1,-1}};
+    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{-1,1}};
 
     for (int y = 0; y < SIZE; ++y) {
         for (int x = 0; x < SIZE; ++x) {

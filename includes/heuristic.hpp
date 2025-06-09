@@ -4,6 +4,8 @@
 #include <utility>
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
+#include <string>
 
 int pattern_score(int count);
 
