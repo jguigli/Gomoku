@@ -100,10 +100,9 @@ int Board::getEvaluation()
         }
     }
 
-    int scoreWhite = evaluate_board(intBoard, 2);
-    int scoreBlack = evaluate_board(intBoard, 1);
+    int score = evaluate_board(intBoard, 2);
 
-    return scoreWhite - scoreBlack;
+    return score;
 }
 
 const std::vector<std::vector<Cell>>& Board::getGrid() const

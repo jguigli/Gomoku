@@ -5,23 +5,23 @@ int pattern_score(int count, int openEnds) {
         case 2:
             switch (openEnds) {
                 case 2: return 100;
-                case 1: return -50;
+                case 1: return 10;
                 default: return 0;
             }
         case 3:
             switch (openEnds) {
-                case 2: return 1000;
-                case 1: return -20000;
+                case 2: return 10000;
+                case 1: return 100;
                 default: return 0;
             }
         case 4:
             switch (openEnds) {
                 case 2: return 10000;
-                case 1: return -1000;
+                case 1: return 10000;
                 default: return 0;
             }
         case 5:
-            return 100000;
+            return 1000000;
         default:
             return 0;
     }
@@ -32,7 +32,7 @@ bool has_gap_pattern(const std::vector<int> & line, int player, int length) {
     int gap_pos = -1;
     if (length < 3 || (int)line.size() < length)
         return false;
-    for (int i =0; i < length; ++i) {
+    for (int i = 0; i < length; ++i) {
         if (line[i] == player)
             count++;
         else if (line[i] == 0) {
@@ -85,13 +85,10 @@ int detect_gap_patterns(const std::vector<std::vector<int>>& board, int player, 
     return score;
 }
 
-int evaluate_board(const std::vector<std::vector<int>>& board, int player) {
+int evaluate_player(const std::vector<std::vector<int>>& board, int player) {
     int score = 0;
     const int SIZE = board.size();
-
-    std::vector<std::pair<int, int>> directions = {
-        {1, 0}, {0, 1}, {1, 1}, {1, -1}
-    };
+    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{1,-1}};
 
     for (int y = 0; y < SIZE; ++y) {
         for (int x = 0; x < SIZE; ++x) {
@@ -124,9 +121,16 @@ int evaluate_board(const std::vector<std::vector<int>>& board, int player) {
         }
     }
     for (auto [dx, dy] : directions) {
-        score += detect_gap_patterns(board, player, 3, dx, dy, 1000);
-        score += detect_gap_patterns(board, player, 4, dx, dy, 10000);
-        score += detect_gap_patterns(board, player, 5, dx, dy, 100000);
+        score += detect_gap_patterns(board, player, 3, dx, dy, 800);
+        score += detect_gap_patterns(board, player, 4, dx, dy, 8000);
+        score += detect_gap_patterns(board, player, 5, dx, dy, 1000000);
     }
     return score;
+}
+
+int evaluate_board(const std::vector<std::vector<int>>& board, int player) {
+    int opponent = (player == 1 ? 2 : 1);
+    int my_score = evaluate_player(board, player);
+    int opp_score = evaluate_player(board, opponent);
+    return my_score - (int)(opp_score * 1.1);
 }
