@@ -27,7 +27,24 @@ std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<in
             }
         }
     }
+       
     return std::vector<std::pair<int, int>>(moves.begin(), moves.end());
+}
+
+std::vector<std::pair<int, int>> find_blocking_moves(const std::vector<std::vector<int>>& board, int opponent) {
+    int SIZE = board.size();
+    std::vector<std::pair<int, int>> blocking_moves;
+    for (int y = 0; y < SIZE; ++y) {
+        for (int x = 0; x < SIZE; ++x) {
+            if (board[y][x] != 0)
+                continue;
+            auto tmp = board;
+            tmp[y][x] = opponent;
+            if (evaluate_player(tmp, opponent) >= 100000)
+                blocking_moves.emplace_back(y, x);
+        }
+    }
+    return blocking_moves;
 }
 
 int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int player) {

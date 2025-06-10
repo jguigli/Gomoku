@@ -254,7 +254,18 @@ int evaluate_player(const std::vector<std::vector<int>>& board, int player) {
 
 int evaluate_board(const std::vector<std::vector<int>>& board, int player) {
     int opponent = (player == 1 ? 2 : 1);
+
+    if (evaluate_player(board, player) >= 1000000)
+        return 10000000;
+    if (evaluate_player(board, opponent) >= 1000000)
+        return -10000000;
+
     int my_score = evaluate_player(board, player);
     int opp_score = evaluate_player(board, opponent);
+    if (opp_score>= 10000)
+        return -500000000;
+    if (my_score >= 10000)
+        return 500000000;
+    
     return my_score - (int)(opp_score * 2);
 }

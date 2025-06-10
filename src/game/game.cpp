@@ -4,7 +4,7 @@
 Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false)
 {
     _resetButton = { BOARD_WIDTH / 2 - 60, BOARD_HEIGHT - 25, 120, 40 };
-    _agent = new Agent(10, CELL_WHITE);
+    _agent = new Agent(2, CELL_WHITE);
     _turnStartTime = std::chrono::high_resolution_clock::now();
 }
 
