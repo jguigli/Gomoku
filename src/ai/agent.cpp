@@ -40,6 +40,7 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             bestX = localBestX;
             bestScore = localBestScore;
             currentDepth++;
+            std::cout << "Depth: " << currentDepth - 1 << ", Best Move: (" << bestY << ", " << bestX << "), Score: " << bestScore << std::endl;
         } else
             break;
     }
