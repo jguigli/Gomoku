@@ -244,15 +244,15 @@ int evaluate_player(const std::vector<std::vector<int>>& board, int player) {
             }
         }
     }
-    for (auto [dx, dy] : directions) {
-        score += detect_gap_patterns(board, player, 3, dx, dy, 800);
-        score += detect_gap_patterns(board, player, 4, dx, dy, 8000);
-        score += detect_gap_patterns(board, player, 5, dx, dy, 1000000);
-    }
+    // for (auto [dx, dy] : directions) {
+    //     score += detect_gap_patterns(board, player, 3, dx, dy, 800);
+    //     score += detect_gap_patterns(board, player, 4, dx, dy, 8000);
+    //     score += detect_gap_patterns(board, player, 5, dx, dy, 1000000);
+    // }
     return score;
 }
 
-int evaluate_board(const std::vector<std::vector<int>>& board, int player) {
+int evaluate_board(const std::vector<std::vector<int>>& board, int player, int currentPlayer) {
     int opponent = (player == 1 ? 2 : 1);
 
     if (evaluate_player(board, player) >= 1000000)
@@ -262,10 +262,20 @@ int evaluate_board(const std::vector<std::vector<int>>& board, int player) {
 
     int my_score = evaluate_player(board, player);
     int opp_score = evaluate_player(board, opponent);
-    if (opp_score>= 10000)
-        return -500000000;
-    if (my_score >= 10000)
-        return 500000000;
-    
-    return my_score - (int)(opp_score * 2);
+    // if (opp_score>= 10000)
+    //     return -500000000;
+    // if (my_score >= 10000)
+    //     return 500000000;
+
+    if (evaluate_player(board, opponent) >= 10000 && currentPlayer != player)
+    return -1000000;
+    if (evaluate_player(board, opponent) >= 1000 && currentPlayer != player)
+    return -500000;
+
+    if (currentPlayer == player) {
+        return my_score - opp_score;
+    }
+    else {
+        return my_score - (opp_score * 2);
+    }
 }

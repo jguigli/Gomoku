@@ -1,6 +1,6 @@
 #include "../includes/minmax.hpp"
 
-static std::unordered_map<std::string, int> transposition_table;
+std::unordered_map<std::string, int> transposition_table;
 
 std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<int>>& board) {
     int SIZE = board.size();
@@ -47,12 +47,50 @@ std::vector<std::pair<int, int>> find_blocking_moves(const std::vector<std::vect
     return blocking_moves;
 }
 
+// int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int player) {
+//     int SIZE = board.size();
+//     if (y < 0 || y >= SIZE || x < 0 || x >= SIZE || board[y][x] != 0)
+//         return 0;
+
+//     int score = 0;
+//     for (int dy = -1; dy <= 1; ++dy)
+//         for (int dx = -1; dx <= 1; ++dx)
+//             if (dy != 0 || dx != 0) {
+//                 int ny = y + dy, nx = x + dx;
+//                 if (ny >= 0 && ny < SIZE && nx >= 0 && nx < SIZE) {
+//                     if (board[ny][nx] == player)
+//                         score += 10;
+//                     else if (board[ny][nx] != 0)
+//                         score -= 5;
+//                 }
+//             }
+//     return score * score;
+// }
+
 int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int player) {
     int SIZE = board.size();
     if (y < 0 || y >= SIZE || x < 0 || x >= SIZE || board[y][x] != 0)
         return 0;
 
     int score = 0;
+
+    auto tmp = board;
+    tmp[y][x] = player;
+
+    if (evaluate_player(tmp, player) >= 1000000)
+        return 10000000;
+
+    if (evaluate_player(tmp, player) >= 100000)
+        score += 100000;
+
+    int opponent = 3 - player;
+    tmp[y][x] = opponent;
+    if (evaluate_player(tmp, opponent) >= 1000000)
+        score += 9000000;
+    else if (evaluate_player(tmp, opponent) >= 1000)
+        score += 900000;
+
+    tmp[y][x] = 0;
     for (int dy = -1; dy <= 1; ++dy)
         for (int dx = -1; dx <= 1; ++dx)
             if (dy != 0 || dx != 0) {
@@ -80,18 +118,20 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     auto now = std::chrono::high_resolution_clock::now();
     float elapsed = std::chrono::duration<float, std::milli>(now - startTime).count();
     if (elapsed > maxTimeMs) {
-        timeout = true;
+        timeout = true;        
         return 0;
     }
+    // std::string indent(10 - depth, ' ');
+    // std::cout << indent << "-> depth: " << depth << ", currentPlayer: " << currentPlayer << std::endl;
     
-    std::string hash = board_to_string(board);
+    std::string hash = board_to_string(board) + std::to_string(currentPlayer);
     auto it = transposition_table.find(hash);
     if (it != transposition_table.end()) {
         return it->second;
     }
     
     if (depth == 0 || generate_moves(board).empty()) {
-        int eval = evaluate_board(board, player);
+        int eval = evaluate_board(board, player, currentPlayer);
         transposition_table[hash] = eval;
         return eval;
     }
@@ -100,12 +140,15 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     std::sort(moves.begin(), moves.end(), [&](const std::pair<int, int>& a, const std::pair<int, int>& b) {
         return move_priority(board, a.first, a.second, currentPlayer) > move_priority(board, b.first, b.second, currentPlayer);
     });
-
+    if (moves.size() > 3)
+        moves.resize(3);
     if (maximizingPlayer) {
         int maxEval = std::numeric_limits<int>::min();
         for (auto [y, x] : moves) {
             board[y][x] = currentPlayer;
-            int eval = minimax(board, depth - 1, alpha, beta, false, player, 3 - currentPlayer,  startTime, maxTimeMs, timeout);
+            int newCurrentPlayer = 3 - currentPlayer;
+            int nextDepth = depth - 1;
+            int eval = minimax(board, nextDepth, alpha, beta, false, player, newCurrentPlayer,  startTime, maxTimeMs, timeout);
             board[y][x] = 0;
             if (timeout) return maxEval;
             maxEval = std::max(maxEval, eval);
@@ -119,7 +162,9 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
         int minEval = std::numeric_limits<int>::max();
         for (auto [y, x] : moves) {
             board[y][x] = currentPlayer;
-            int eval = minimax(board, depth - 1, alpha, beta, true, player, 3 - currentPlayer, startTime, maxTimeMs, timeout);
+            int nextDepth = depth - 1;
+            int newCurrentPlayer = 3 - currentPlayer;
+            int eval = minimax(board, nextDepth, alpha, beta, true, player, newCurrentPlayer, startTime, maxTimeMs, timeout);
             board[y][x] = 0;
             if (timeout) return minEval;
             minEval = std::min(minEval, eval);

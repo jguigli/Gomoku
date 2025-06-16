@@ -100,7 +100,7 @@ int Board::getEvaluation()
         }
     }
 
-    int score = evaluate_board(intBoard, 2);
+    int score = evaluate_board(intBoard, 2, 2);
 
     return score;
 }
