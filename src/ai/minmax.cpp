@@ -121,14 +121,15 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
         timeout = true;        
         return 0;
     }
-    // std::string indent(10 - depth, ' ');
-    // std::cout << indent << "-> depth: " << depth << ", currentPlayer: " << currentPlayer << std::endl;
     
     std::string hash = board_to_string(board) + std::to_string(currentPlayer);
     auto it = transposition_table.find(hash);
     if (it != transposition_table.end()) {
         return it->second;
     }
+    auto moves = generate_moves(board);
+    if (moves.size() > 3)
+        moves.resize(3);
     
     if (depth == 0 || generate_moves(board).empty()) {
         int eval = evaluate_board(board, player, currentPlayer);
@@ -136,12 +137,10 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
         return eval;
     }
 
-    auto moves = generate_moves(board);
     std::sort(moves.begin(), moves.end(), [&](const std::pair<int, int>& a, const std::pair<int, int>& b) {
         return move_priority(board, a.first, a.second, currentPlayer) > move_priority(board, b.first, b.second, currentPlayer);
     });
-    if (moves.size() > 3)
-        moves.resize(3);
+
     if (maximizingPlayer) {
         int maxEval = std::numeric_limits<int>::min();
         for (auto [y, x] : moves) {

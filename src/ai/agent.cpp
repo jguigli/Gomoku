@@ -6,7 +6,7 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
     extern std::unordered_map<std::string, int> transposition_table;
 
     auto turnStart = std::chrono::high_resolution_clock::now();
-    float maxTimeMs = 5000.0f;
+    float maxTimeMs = 500.0f;
     bool timeout = false;
 
     int gridSize = board.size();

@@ -23,7 +23,7 @@ ifeq ($(UNAME_S),Darwin)
 	IFLAGS = -I/opt/homebrew/include
 endif
 
-CFLAGS    := -std=c++20 -Wall -Wextra -Werror -g -fsanitize=address
+CFLAGS    := -std=c++20 -Wall -Wextra -Werror -g
 
 
 # Génère les dossiers nécessaires pour les .o
