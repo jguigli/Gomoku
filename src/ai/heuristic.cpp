@@ -253,29 +253,32 @@ int evaluate_player(const std::vector<std::vector<int>>& board, int player) {
 }
 
 int evaluate_board(const std::vector<std::vector<int>>& board, int player, int currentPlayer) {
-    int opponent = (player == 1 ? 2 : 1);
+    // int opponent = (player == 1 ? 2 : 1);
+    (void) player; // Unused parameter
+    (void) currentPlayer; // Unused parameter
+    (void) board; // Unused parameter
+    // if (evaluate_player(board, player) >= 1000000)
+    //     return 10000000;
+    // if (evaluate_player(board, opponent) >= 1000000)
+    //     return -10000000;
 
-    if (evaluate_player(board, player) >= 1000000)
-        return 10000000;
-    if (evaluate_player(board, opponent) >= 1000000)
-        return -10000000;
-
-    int my_score = evaluate_player(board, player);
-    int opp_score = evaluate_player(board, opponent);
+    // int my_score = evaluate_player(board, player);
+    // int opp_score = evaluate_player(board, opponent);
     // if (opp_score>= 10000)
     //     return -500000000;
     // if (my_score >= 10000)
     //     return 500000000;
 
-    if (evaluate_player(board, opponent) >= 10000 && currentPlayer != player)
-    return -1000000;
-    if (evaluate_player(board, opponent) >= 1000 && currentPlayer != player)
-    return -500000;
+    // if (evaluate_player(board, opponent) >= 10000 && currentPlayer != player)
+    // return -1000000;
+    // if (evaluate_player(board, opponent) >= 1000 && currentPlayer != player)
+    // return -500000;
 
-    if (currentPlayer == player) {
-        return my_score - opp_score;
-    }
-    else {
-        return my_score - (opp_score * 2);
-    }
+    // if (currentPlayer == player) {
+    //     return my_score - opp_score;
+    // }
+    // else {
+    //     return my_score - (opp_score * 2);
+    // }
+    return(random());
 }
