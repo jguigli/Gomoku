@@ -2,7 +2,7 @@
 
 std::unordered_map<std::string, int> transposition_table;
 
-std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<int>>& board) {
+std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<int>>& board, int player) {
     int SIZE = board.size();
     int margin = 1;
     std::set<std::pair<int, int>> moves;
@@ -27,45 +27,12 @@ std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<in
             }
         }
     }
-       
+    auto free_threes = detect_free_threes(board, player);
+    for (const auto& pos : free_threes)
+        moves.insert(pos);
+      
     return std::vector<std::pair<int, int>>(moves.begin(), moves.end());
 }
-
-std::vector<std::pair<int, int>> find_blocking_moves(const std::vector<std::vector<int>>& board, int opponent) {
-    int SIZE = board.size();
-    std::vector<std::pair<int, int>> blocking_moves;
-    for (int y = 0; y < SIZE; ++y) {
-        for (int x = 0; x < SIZE; ++x) {
-            if (board[y][x] != 0)
-                continue;
-            auto tmp = board;
-            tmp[y][x] = opponent;
-            if (evaluate_player(tmp, opponent) >= 100000)
-                blocking_moves.emplace_back(y, x);
-        }
-    }
-    return blocking_moves;
-}
-
-// int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int player) {
-//     int SIZE = board.size();
-//     if (y < 0 || y >= SIZE || x < 0 || x >= SIZE || board[y][x] != 0)
-//         return 0;
-
-//     int score = 0;
-//     for (int dy = -1; dy <= 1; ++dy)
-//         for (int dx = -1; dx <= 1; ++dx)
-//             if (dy != 0 || dx != 0) {
-//                 int ny = y + dy, nx = x + dx;
-//                 if (ny >= 0 && ny < SIZE && nx >= 0 && nx < SIZE) {
-//                     if (board[ny][nx] == player)
-//                         score += 10;
-//                     else if (board[ny][nx] != 0)
-//                         score -= 5;
-//                 }
-//             }
-//     return score * score;
-// }
 
 int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int player) {
     int SIZE = board.size();
@@ -73,24 +40,25 @@ int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int 
         return 0;
 
     int score = 0;
-
     auto tmp = board;
     tmp[y][x] = player;
 
-    if (evaluate_player(tmp, player) >= 1000000)
+    int eval_player = evaluate_player(tmp, player);
+    if (eval_player >= 1000000)
         return 10000000;
 
-    if (evaluate_player(tmp, player) >= 100000)
+    if (eval_player >= 100000)
         score += 100000;
 
-    int opponent = 3 - player;
-    tmp[y][x] = opponent;
-    if (evaluate_player(tmp, opponent) >= 1000000)
-        score += 9000000;
-    else if (evaluate_player(tmp, opponent) >= 1000)
-        score += 900000;
+    // tmp[y][x] = 3 - player;
+    // int eval_opp = evaluate_player(tmp, 3 - player);
+    // if (eval_opp >= 1000000)
+    //     score += 9000000;
+    // else if (eval_opp >= 10000)
+    //     score += 900000;
 
     tmp[y][x] = 0;
+
     for (int dy = -1; dy <= 1; ++dy)
         for (int dx = -1; dx <= 1; ++dx)
             if (dy != 0 || dx != 0) {
@@ -102,7 +70,7 @@ int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int 
                         score -= 5;
                 }
             }
-    return score * score;
+    return score;
 }
 
 
@@ -127,11 +95,11 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     if (it != transposition_table.end()) {
         return it->second;
     }
-    auto moves = generate_moves(board);
+    auto moves = generate_moves(board, player);
     if (moves.size() > 3)
         moves.resize(3);
     
-    if (depth == 0 || generate_moves(board).empty()) {
+    if (depth == 0 || generate_moves(board, player).empty()) {
         int eval = evaluate_board(board, player, currentPlayer);
         transposition_table[hash] = eval;
         return eval;

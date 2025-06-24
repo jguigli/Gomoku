@@ -107,63 +107,63 @@ std::string line_to_pattern(const std::vector<int>& line, int start) {
     return s;
 }
 
-bool has_gap_pattern(const std::vector<int> & line, int player, int length) {
-    int count = 0;
-    int gap_pos = -1;
-    if (length < 3 || (int)line.size() < length)
-        return false;
-    for (int i = 0; i < length; ++i) {
-        if (line[i] == player)
-            count++;
-        else if (line[i] == 0) {
-            if (gap_pos == -1)
-                gap_pos = i;
-            else
-                return false;
-        } else
-            return false;
-    }
-    return (count == length - 1 && gap_pos > 0 && gap_pos < length - 1);
-}
+// bool has_gap_pattern(const std::vector<int> & line, int player, int length) {
+//     int count = 0;
+//     int gap_pos = -1;
+//     if (length < 3 || (int)line.size() < length)
+//         return false;
+//     for (int i = 0; i < length; ++i) {
+//         if (line[i] == player)
+//             count++;
+//         else if (line[i] == 0) {
+//             if (gap_pos == -1)
+//                 gap_pos = i;
+//             else
+//                 return false;
+//         } else
+//             return false;
+//     }
+//     return (count == length - 1 && gap_pos > 0 && gap_pos < length - 1);
+// }
 
-int detect_gap_patterns(const std::vector<std::vector<int>>& board, int player, int length, int dx, int dy, int bonus_gap) {
-    int score = 0;
-    int SIZE = board.size();
+// int detect_gap_patterns(const std::vector<std::vector<int>>& board, int player, int length, int dx, int dy, int bonus_gap) {
+//     int score = 0;
+//     int SIZE = board.size();
 
-    for (int y = 0; y < SIZE; ++y) {
-        for (int x = 0; x < SIZE; ++x) {
-            std::vector<int> line;
-            int valid = 1;
-            for (int k = 0; k < length; ++k) {
-                int nx = x + k * dx;
-                int ny = y + k * dy;
-                if (nx >= 0 && ny >= 0 && nx < SIZE && ny < SIZE)
-                    line.push_back(board[ny][nx]);
-                else
-                    valid = 0;
-            }
-            if (!valid)
-                continue;
+//     for (int y = 0; y < SIZE; ++y) {
+//         for (int x = 0; x < SIZE; ++x) {
+//             std::vector<int> line;
+//             int valid = 1;
+//             for (int k = 0; k < length; ++k) {
+//                 int nx = x + k * dx;
+//                 int ny = y + k * dy;
+//                 if (nx >= 0 && ny >= 0 && nx < SIZE && ny < SIZE)
+//                     line.push_back(board[ny][nx]);
+//                 else
+//                     valid = 0;
+//             }
+//             if (!valid)
+//                 continue;
 
-            int beforeX = x - dx;
-            int beforeY = y - dy;
-            int afterX = x + dx * length;
-            int afterY = y + dy * length;
-            int openEnds = 0;
-            if (beforeX >= 0 && beforeY >= 0 && beforeX < SIZE && beforeY < SIZE && board[beforeY][beforeX] == 0)
-                openEnds++;
-            if (afterX >= 0 && afterY >= 0 && afterX < SIZE && afterY < SIZE && board[afterY][afterX] == 0)
-                openEnds++;
-            if (openEnds != 2)
-                continue;
+//             int beforeX = x - dx;
+//             int beforeY = y - dy;
+//             int afterX = x + dx * length;
+//             int afterY = y + dy * length;
+//             int openEnds = 0;
+//             if (beforeX >= 0 && beforeY >= 0 && beforeX < SIZE && beforeY < SIZE && board[beforeY][beforeX] == 0)
+//                 openEnds++;
+//             if (afterX >= 0 && afterY >= 0 && afterX < SIZE && afterY < SIZE && board[afterY][afterX] == 0)
+//                 openEnds++;
+//             if (openEnds != 2)
+//                 continue;
 
-            if (has_gap_pattern(line, player, length)) {
-                score += bonus_gap;
-            }
-        }
-    }
-    return score;
-}
+//             if (has_gap_pattern(line, player, length)) {
+//                 score += bonus_gap;
+//             }
+//         }
+//     }
+//     return score;
+// }
 
 int evaluate_player(const std::vector<std::vector<int>>& board, int player) {
     int score = 0;
@@ -174,29 +174,7 @@ int evaluate_player(const std::vector<std::vector<int>>& board, int player) {
         for (int x = 0; x < SIZE; ++x) {
             if (board[y][x] != player)
                 continue;
-            // for (auto [dx, dy] : directions) {
-            //     int prevX = x - dx;
-            //     int prevY = y - dy;
-            //     if (prevX >= 0 && prevY >= 0 && prevX < SIZE && prevY < SIZE && board[prevY][prevX] == player)
-            //         continue;
 
-            //     int count = 0;
-            //     int nx = x, ny = y;
-            //     while (nx >= 0 && ny >= 0 && nx < SIZE && ny < SIZE && board[ny][nx] == player) {
-            //         count++;
-            //         nx += dx;
-            //         ny += dy;
-            //     }
-            //     if (count < 2)
-            //         continue;
-
-            //     int openEnds = 0;
-            //     if (prevX >= 0 && prevY >= 0 && prevX < SIZE && prevY < SIZE && board[prevY][prevX] == 0)
-            //         openEnds++;
-            //     if (nx >= 0 && ny >= 0 && nx < SIZE && ny < SIZE && board[ny][nx] == 0)
-            //         openEnds++;
-
-            //     score += pattern_score(count, openEnds);
             for (auto [dx, dy] : directions) {
                 std::vector<int> line;
                 for (int k = 0; k < 5; ++k) {
@@ -217,31 +195,274 @@ int evaluate_player(const std::vector<std::vector<int>>& board, int player) {
             }
         }
     }
-    // for (auto [dx, dy] : directions) {
-    //     score += detect_gap_patterns(board, player, 3, dx, dy, 800);
-    //     score += detect_gap_patterns(board, player, 4, dx, dy, 8000);
-    //     score += detect_gap_patterns(board, player, 5, dx, dy, 1000000);
-    // }
     return score;
+}
+
+int count_free_threes(const std::vector<std::vector<int>>& board, int player) {
+    int count = 0;
+    int SIZE = board.size();
+    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{-1,1}};
+    for (int y = 0; y < SIZE; ++y) {
+        for (int x = 0; x < SIZE; ++x) {
+            for (auto [dx, dy] : directions) {
+                std::vector<int> line;
+                for (int k = -1; k < 4; ++k) {
+                    int nx = x + dx * k;
+                    int ny = y + dy * k;
+                    if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE)
+                        line.push_back(board[ny][nx] == player ? 1 : (board[ny][nx] == 0 ? 0 : 2));
+                    else
+                        line.push_back(2);
+                }
+                if (line.size() == 5) {
+                    if (line[0] == 0 && line[1] == 1 && line[2] == 1 && line[3] == 1 && line[4] == 0)
+                        count++;
+                }
+            }
+        }
+    }
+    return count;
+}
+
+std::set<std::pair<int, int>> detect_immediate_wins(const std::vector<std::vector<int>>& board, int player) {
+    int SIZE = board.size();
+    std::set<std::pair<int, int>> wins;
+    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{-1,1}};
+
+    std::vector<std::vector<int>> patterns = {
+        {0, player, player, player, player},
+        {player, 0, player, player, player},
+        {player, player, 0, player, player},
+        {player, player, player, 0, player},
+        {player, player, player, player, 0}
+    };
+
+    for (int y = 0; y < SIZE; ++y) {
+        for (int x = 0; x < SIZE; ++x) {
+            for (auto [dx, dy] : directions) {
+                for (const auto& pat : patterns) {
+                    int len = pat.size();
+                    int empty_y = -1, empty_x = -1;
+                    bool match = true;
+                    for (int k = 0; k < len; ++k) {
+                        int nx = x + dx * k;
+                        int ny = y + dy * k;
+                        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+                            match = false;
+                            break;
+                        }
+                        int cell = board[ny][nx];
+                        if (pat[k] == 0) {
+                            if (cell == 0) {
+                                empty_y = ny;
+                                empty_x = nx;
+                            } else {
+                                match = false;
+                                break;
+                            }
+                        } else if (cell != pat[k]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match && empty_y != -1 && empty_x != -1) {
+                        wins.insert({empty_y, empty_x});
+                    }
+                }
+            }
+        }
+    }
+    return wins;
+}
+
+std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::vector<int>>& board, int opponent) {
+    int SIZE = board.size();
+    std::set<std::pair<int, int>> threats;
+    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{-1,1}};
+
+    std::vector<std::vector<int>> patterns = {
+        {0, opponent, 0, opponent, opponent, 0},
+        {0, opponent, opponent, 0, opponent, 0},
+        {0, opponent, opponent, opponent, 0},
+        {opponent, opponent, opponent, opponent, 0},
+        {0, opponent, opponent, opponent, opponent},
+        {0, opponent, opponent, opponent, opponent, 0}
+    };
+
+    for (int y = 0; y < SIZE; ++y) {
+        for (int x = 0; x < SIZE; ++x) {
+            for (auto [dx, dy] : directions) {
+                for (const auto& pat : patterns) {
+                    int len = pat.size();
+                    std::vector<std::pair<int, int>> empty_spots;
+                    bool match = true;
+                    for (int k = 0; k < len; ++k) {
+                        int nx = x + dx * k;
+                        int ny = y + dy * k;
+                        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+                            match = false;
+                            break;
+                        }
+                        int cell = board[ny][nx];
+                        if (pat[k] == 0) {
+                            if (cell == 0)
+                                empty_spots.push_back({ny, nx});
+                            else {
+                                match = false;
+                                break;
+                            }
+                        } else if (pat[k] == opponent) {
+                            if (cell != opponent) {
+                                match = false;
+                                break;
+                            }
+                        } else {
+                            // Si le pattern contient une valeur inattendue, on ne matche pas
+                            match = false;
+                            break;
+                        }
+                    }
+                    // On ne retient le pattern que si toutes les cases correspondent
+                    if (match && !empty_spots.empty()) {
+                        for (auto pos : empty_spots)
+                            threats.insert(pos);
+                    }
+                }
+            }
+        }
+    }
+    return threats;
+}
+
+// std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::vector<int>>& board, int opponent) {
+//     int SIZE = board.size();
+//     std::set<std::pair<int, int>> threats;
+
+//     for (int y = 0; y < SIZE; ++y) {
+//         for (int x = 0; x < SIZE; ++x) {
+//             if (board[y][x] != 0)
+//                 continue;
+//             auto tmp = board;
+//             tmp[y][x] = opponent;
+//             auto threes = detect_free_threes(tmp, opponent);
+//             auto fours = detect_free_fours(tmp, opponent);
+//             if (!threes.empty() || !fours.empty()) {
+//                 threats.insert({y, x});
+//             }
+//         }
+//     }
+//     return threats;
+// }
+
+std::set<std::pair<int, int>> detect_free_threes(const std::vector<std::vector<int>>& board, int player) {
+    int SIZE = board.size();
+    std::set<std::pair<int, int>> free_threes;
+    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{-1,1}};
+
+    std::vector<int> pattern = {0, player, player, player, 0};
+
+    for (int y = 0; y < SIZE; ++y) {
+        for (int x = 0; x < SIZE; ++x) {
+            for (auto [dx, dy] : directions) {
+                bool match = true;
+                std::vector<std::pair<int, int>> empty_spots;
+                for (int k = 0; k < 5; ++k) {
+                    int nx = x + dx * k;
+                    int ny = y + dy * k;
+                    if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+                        match = false;
+                        break;
+                    }
+                    int cell = board[ny][nx];
+                    if (pattern[k] == 0) {
+                        if (cell == 0)
+                            empty_spots.push_back({ny, nx});
+                        else {
+                            match = false;
+                            break;
+                        }
+                    } else if (cell != pattern[k]) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match && empty_spots.size() == 2) {
+                    for (auto pos : empty_spots)
+                        free_threes.insert(pos);
+                }
+            }
+        }
+    }
+    return free_threes;
+}
+
+std::set<std::pair<int, int>> detect_free_fours(const std::vector<std::vector<int>>& board, int player) {
+    int SIZE = board.size();
+    std::set<std::pair<int, int>> free_fours;
+    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{-1,1}};
+
+    std::vector<int> pattern = {0, player, player, player, player, 0};
+
+    for (int y = 0; y < SIZE; ++y) {
+        for (int x = 0; x < SIZE; ++x) {
+            for (auto [dx, dy] : directions) {
+                bool match = true;
+                std::vector<std::pair<int, int>> empty_spots;
+                for (int k = 0; k < 6; ++k) {
+                    int nx = x + dx * k;
+                    int ny = y + dy * k;
+                    if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+                        match = false;
+                        break;
+                    }
+                    int cell = board[ny][nx];
+                    if (pattern[k] == 0) {
+                        if (cell == 0)
+                            empty_spots.push_back({ny, nx});
+                        else {
+                            match = false;
+                            break;
+                        }
+                    } else if (cell != pattern[k]) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match && empty_spots.size() == 2) {
+                    for (auto pos : empty_spots)
+                        free_fours.insert(pos);
+                }
+            }
+        }
+    }
+    return free_fours;
 }
 
 int evaluate_board(const std::vector<std::vector<int>>& board, int player, int currentPlayer) {
     int opponent = (player == 1 ? 2 : 1);
-    if (evaluate_player(board, player) >= 1000000)
-        return 10000000;
-    if (evaluate_player(board, opponent) >= 1000000)
-        return -10000000;
-
     int my_score = evaluate_player(board, player);
     int opp_score = evaluate_player(board, opponent);
-    if (opp_score>= 10000)
-        return -500000000;
+    if (my_score >= 1000000)
+        return 10000000;
+    if (opp_score >= 1000000)
+        return -10000000;
+
+    int opp_free_threes = count_free_threes(board, opponent);
+    if (opp_free_threes >= 1)
+        return -5000000;
+
+    int my_free_threes = count_free_threes(board, player);
+    if (my_free_threes >= 1)
+        return 5000000;
+
     if (my_score >= 10000)
         return 500000000;
+    if (opp_score>= 10000)
+        return -500000000;
 
-    if (evaluate_player(board, opponent) >= 10000 && currentPlayer != player)
+    if (my_score >= 10000 && currentPlayer != player)
     return -1000000;
-    if (evaluate_player(board, opponent) >= 1000 && currentPlayer != player)
+    if (opp_score >= 1000 && currentPlayer != player)
     return -500000;
 
     if (currentPlayer == player) {
