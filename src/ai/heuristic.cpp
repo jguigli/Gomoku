@@ -107,64 +107,6 @@ std::string line_to_pattern(const std::vector<int>& line, int start) {
     return s;
 }
 
-// bool has_gap_pattern(const std::vector<int> & line, int player, int length) {
-//     int count = 0;
-//     int gap_pos = -1;
-//     if (length < 3 || (int)line.size() < length)
-//         return false;
-//     for (int i = 0; i < length; ++i) {
-//         if (line[i] == player)
-//             count++;
-//         else if (line[i] == 0) {
-//             if (gap_pos == -1)
-//                 gap_pos = i;
-//             else
-//                 return false;
-//         } else
-//             return false;
-//     }
-//     return (count == length - 1 && gap_pos > 0 && gap_pos < length - 1);
-// }
-
-// int detect_gap_patterns(const std::vector<std::vector<int>>& board, int player, int length, int dx, int dy, int bonus_gap) {
-//     int score = 0;
-//     int SIZE = board.size();
-
-//     for (int y = 0; y < SIZE; ++y) {
-//         for (int x = 0; x < SIZE; ++x) {
-//             std::vector<int> line;
-//             int valid = 1;
-//             for (int k = 0; k < length; ++k) {
-//                 int nx = x + k * dx;
-//                 int ny = y + k * dy;
-//                 if (nx >= 0 && ny >= 0 && nx < SIZE && ny < SIZE)
-//                     line.push_back(board[ny][nx]);
-//                 else
-//                     valid = 0;
-//             }
-//             if (!valid)
-//                 continue;
-
-//             int beforeX = x - dx;
-//             int beforeY = y - dy;
-//             int afterX = x + dx * length;
-//             int afterY = y + dy * length;
-//             int openEnds = 0;
-//             if (beforeX >= 0 && beforeY >= 0 && beforeX < SIZE && beforeY < SIZE && board[beforeY][beforeX] == 0)
-//                 openEnds++;
-//             if (afterX >= 0 && afterY >= 0 && afterX < SIZE && afterY < SIZE && board[afterY][afterX] == 0)
-//                 openEnds++;
-//             if (openEnds != 2)
-//                 continue;
-
-//             if (has_gap_pattern(line, player, length)) {
-//                 score += bonus_gap;
-//             }
-//         }
-//     }
-//     return score;
-// }
-
 int evaluate_player(const std::vector<std::vector<int>>& board, int player) {
     int score = 0;
     const int SIZE = board.size();
@@ -338,18 +280,16 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
 // std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::vector<int>>& board, int opponent) {
 //     int SIZE = board.size();
 //     std::set<std::pair<int, int>> threats;
-
 //     for (int y = 0; y < SIZE; ++y) {
 //         for (int x = 0; x < SIZE; ++x) {
 //             if (board[y][x] != 0)
 //                 continue;
 //             auto tmp = board;
 //             tmp[y][x] = opponent;
-//             auto threes = detect_free_threes(tmp, opponent);
-//             auto fours = detect_free_fours(tmp, opponent);
-//             if (!threes.empty() || !fours.empty()) {
+//             if (!detect_immediate_wins(tmp, opponent).empty())
 //                 threats.insert({y, x});
-//             }
+//             else if (!detect_free_fours(tmp, opponent).empty() || !detect_free_threes(tmp, opponent).empty())
+//                 threats.insert({y, x});
 //         }
 //     }
 //     return threats;

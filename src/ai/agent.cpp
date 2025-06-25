@@ -15,14 +15,6 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
         for (int x = 0; x < gridSize; ++x)
             intBoard[y][x] = board[y][x];
 
-    std::cout << "board is: "<< std::endl;
-    for (const auto& row : intBoard) {
-        for (int cell : row) {
-            std::cout << cell << " ";
-        }
-        std::cout << std::endl;
-    }
-
     int bestY = -1, bestX = -1, bestScore = std::numeric_limits<int>::min();
     int currentDepth = 1;
 

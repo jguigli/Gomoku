@@ -48,14 +48,16 @@ int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int 
         return 10000000;
 
     if (eval_player >= 100000)
-        score += 100000;
+        return score += 100000;
 
-    // tmp[y][x] = 3 - player;
-    // int eval_opp = evaluate_player(tmp, 3 - player);
-    // if (eval_opp >= 1000000)
-    //     score += 9000000;
-    // else if (eval_opp >= 10000)
-    //     score += 900000;
+    tmp[y][x] = 0;
+
+    tmp[y][x] = 3 - player;
+    int eval_opp = evaluate_player(tmp, 3 - player);
+    if (eval_opp >= 1000000)
+        return score += 9000000;
+    else if (eval_opp >= 10000)
+        return score += 900000;
 
     tmp[y][x] = 0;
 
@@ -89,7 +91,23 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
         timeout = true;        
         return 0;
     }
-    
+    auto wins = detect_immediate_wins(board, currentPlayer);
+    if (!wins.empty())
+        return maximizingPlayer ? 10000000 : -10000000;
+
+    int opponent = (currentPlayer == 1 ? 2 : 1);
+    auto threats = detect_immediate_threats(board, opponent);
+    if (!threats.empty())
+        return maximizingPlayer ? -9000000 : 9000000;
+
+    auto free_fours = detect_free_fours(board, currentPlayer);
+    if (!free_fours.empty())
+        return maximizingPlayer ? 8000000 : -8000000;
+
+    auto free_threes = detect_free_threes(board, currentPlayer);
+    if (!free_threes.empty())
+        return maximizingPlayer ? 5000000 : -5000000;
+
     std::string hash = board_to_string(board) + std::to_string(currentPlayer);
     auto it = transposition_table.find(hash);
     if (it != transposition_table.end()) {
