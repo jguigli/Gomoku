@@ -286,7 +286,10 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
         {0, opponent, opponent, opponent, 0},
         {opponent, opponent, opponent, opponent, 0},
         {0, opponent, opponent, opponent, opponent},
-        {0, opponent, opponent, opponent, opponent, 0}
+        {0, opponent, opponent, opponent, opponent, 0},
+        {opponent, 0, opponent, opponent, opponent},
+        {opponent, opponent, 0, opponent, opponent},
+        {opponent, opponent, opponent, 0, opponent}
     };
 
     for (int y = 0; y < SIZE; ++y) {
@@ -317,12 +320,10 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
                                 break;
                             }
                         } else {
-                            // Si le pattern contient une valeur inattendue, on ne matche pas
                             match = false;
                             break;
                         }
                     }
-                    // On ne retient le pattern que si toutes les cases correspondent
                     if (match && !empty_spots.empty()) {
                         for (auto pos : empty_spots)
                             threats.insert(pos);
