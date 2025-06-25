@@ -76,6 +76,12 @@ Cell Board::getCell(int x, int y) const
     return _grid[y][x];
 }
 
+void Board::setCell(int x, int y, Cell cell)
+{
+    if (isInsideGrid(x, y))
+        _grid[y][x] = cell;
+}
+
 void Board::emptyCell(int x, int y)
 {
     if (isInsideGrid(x, y))
