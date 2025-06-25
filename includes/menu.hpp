@@ -8,8 +8,8 @@ enum GameMode {
 };
 
 enum Difficulty {
-    BEGINNER = 3,
-    NORMAL = 6,
+    BEGINNER = 1,
+    NORMAL = 4,
     HARD = 10
 };
 

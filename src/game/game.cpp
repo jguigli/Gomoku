@@ -7,7 +7,7 @@ Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE
     _menuButton = { BOARD_WIDTH / 2, BOARD_HEIGHT - 25, 100, 40 };
     _backwardButton = { BOARD_WIDTH / 2 - 220, BOARD_HEIGHT - 25, 40, 40 };
     _forwardButton = { BOARD_WIDTH / 2 + 150, BOARD_HEIGHT - 25, 40, 40 };
-    _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE);
+    _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE, _blackStone, _whiteStone);
     std::cout<< "CELL_WHITE : " << CELL_WHITE << std::endl;
     _turnStartTime = std::chrono::high_resolution_clock::now();
 }
@@ -18,7 +18,7 @@ Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackS
     _menuButton = { BOARD_WIDTH / 2, BOARD_HEIGHT - 25, 100, 40 };
     _backwardButton = { BOARD_WIDTH / 2 - 220, BOARD_HEIGHT - 25, 40, 40 };
     _forwardButton = { BOARD_WIDTH / 2 + 150, BOARD_HEIGHT - 25, 40, 40 };
-    _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE);
+    _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE, _blackStone, _whiteStone);
     _agentActive = (gameMode == PLAYER_VS_AI);
     _turnStartTime = std::chrono::high_resolution_clock::now();
 }
@@ -60,7 +60,7 @@ void Game::setGameMode(GameMode gameMode, Difficulty difficulty) {
     
     // Update agent with new difficulty
     delete _agent;
-    _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE);
+    _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE, _blackStone, _whiteStone);
     
     reset(); // Reset the game state
 }

@@ -55,8 +55,8 @@ int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int 
     auto tmp = board;
     tmp[y][x] = player;
 
-    // if (is_crossed_win(tmp, y, x, player))
-    //     return 100000000;
+    if (is_crossed_win(tmp, y, x, player))
+        return 100000000;
 
     int eval_player = evaluate_player(tmp, player);
     if (eval_player >= 1000000)
@@ -99,7 +99,29 @@ std::string board_to_string(const std:: vector<std::vector<int>> & board){
     return result;
 }
 
-int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta, bool maximizingPlayer, int player, int currentPlayer, std::chrono::high_resolution_clock::time_point startTime, float maxTimeMs, bool& timeout) {
+std::vector<std::pair<int, int>> simulate_capture(std::vector<std::vector<int>>& board, int y, int x, int player) {
+    std::vector<std::pair<int, int>> captured_positions;
+    int SIZE = board.size();
+    int opponent = 3 - player;
+    const int directions[4][2] = { {1,0},{0,1},{1,1},{1,-1} };
+    for (auto& dir : directions) {
+        int ny1 = y + dir[0], nx1 = x + dir[1];
+        int ny2 = y + 2*dir[0], nx2 = x + 2*dir[1];
+        int ny3 = y + 3*dir[0], nx3 = x + 3*dir[1];
+        if (ny3 >= 0 && ny3 < SIZE && nx3 >= 0 && nx3 < SIZE) {
+            if (board[ny1][nx1] == opponent && board[ny2][nx2] == opponent && board[ny3][nx3] == player) {
+                // Capture!
+                captured_positions.emplace_back(ny1, nx1);
+                captured_positions.emplace_back(ny2, nx2);
+                board[ny1][nx1] = 0;
+                board[ny2][nx2] = 0;
+            }
+        }
+    }
+    return captured_positions;
+}
+
+int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta, bool maximizingPlayer, int player, int currentPlayer, std::chrono::high_resolution_clock::time_point startTime, float maxTimeMs, bool& timeout, int my_captures, int opp_captures) {
     auto now = std::chrono::high_resolution_clock::now();
     float elapsed = std::chrono::duration<float, std::milli>(now - startTime).count();
     if (elapsed > maxTimeMs) {
@@ -133,7 +155,7 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
         moves.resize(3);
     
     if (depth == 0 || generate_moves(board, player).empty()) {
-        int eval = evaluate_board(board, player, currentPlayer);
+        int eval = evaluate_board(board, player, currentPlayer, my_captures, opp_captures);
         transposition_table[hash] = eval;
         return eval;
     }
@@ -146,10 +168,20 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
         int maxEval = std::numeric_limits<int>::min();
         for (auto [y, x] : moves) {
             board[y][x] = currentPlayer;
+            auto captured_positions = simulate_capture(board, y, x, currentPlayer);
+            int captured = captured_positions.size() / 2;
+            int next_my_captures = my_captures;
+            int next_opp_captures = opp_captures;
+            if (currentPlayer == player)
+                next_my_captures += captured;
+            else
+                next_opp_captures += captured;
             int newCurrentPlayer = 3 - currentPlayer;
             int nextDepth = depth - 1;
-            int eval = minimax(board, nextDepth, alpha, beta, false, player, newCurrentPlayer,  startTime, maxTimeMs, timeout);
+            int eval = minimax(board, nextDepth, alpha, beta, false, player, newCurrentPlayer,  startTime, maxTimeMs, timeout, next_my_captures, next_opp_captures);
             board[y][x] = 0;
+            for (auto& pos : captured_positions)
+                board[pos.first][pos.second] = 3 - currentPlayer;
             if (timeout) return maxEval;
             maxEval = std::max(maxEval, eval);
             alpha = std::max(alpha, eval);
@@ -162,10 +194,20 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
         int minEval = std::numeric_limits<int>::max();
         for (auto [y, x] : moves) {
             board[y][x] = currentPlayer;
+            auto captured_positions = simulate_capture(board, y, x, currentPlayer);
+            int captured = captured_positions.size() / 2;
+            int next_my_captures = my_captures;
+            int next_opp_captures = opp_captures;
+            if (currentPlayer == player)
+                next_my_captures += captured;
+            else
+                next_opp_captures += captured;
             int nextDepth = depth - 1;
             int newCurrentPlayer = 3 - currentPlayer;
-            int eval = minimax(board, nextDepth, alpha, beta, true, player, newCurrentPlayer, startTime, maxTimeMs, timeout);
+            int eval = minimax(board, nextDepth, alpha, beta, true, player, newCurrentPlayer, startTime, maxTimeMs, timeout, next_my_captures, next_opp_captures);
             board[y][x] = 0;
+            for (auto& pos : captured_positions)
+                board[pos.first][pos.second] = 3 - currentPlayer;
             if (timeout) return minEval;
             minEval = std::min(minEval, eval);
             beta = std::min(beta, eval);

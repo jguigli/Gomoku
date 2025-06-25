@@ -6,7 +6,7 @@
 
 class Agent {
     public:
-        Agent(int depth, Cell iaCell);
+        Agent(int depth, Cell iaCell, Player& _blackStone, Player& _whiteStone);
 
         struct Result {
             int     y;
@@ -24,4 +24,6 @@ class Agent {
     private:
         int depth;
         Cell iaCell;
+        Player& _blackStone;
+        Player& _whiteStone;
 };

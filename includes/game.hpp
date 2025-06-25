@@ -6,6 +6,7 @@
 #include "menu.hpp"
 #include <chrono>
 #include <vector>
+#include <cmath>
 
 struct Move {
 	int x;

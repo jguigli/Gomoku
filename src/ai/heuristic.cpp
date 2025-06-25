@@ -236,8 +236,8 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
 
     for (int y = 0; y < SIZE; ++y) {
         for (int x = 0; x < SIZE; ++x) {
-            // if (is_crossed_threat(board, y, x, opponent))
-            //     threats.insert({y, x});
+            if (is_crossed_threat(board, y, x, opponent))
+                threats.insert({y, x});
             for (auto [dx, dy] : directions) {
                 for (const auto& pat : patterns) {
                     int len = pat.size();
@@ -464,13 +464,53 @@ std::set<std::pair<int, int>> detect_free_fours(const std::vector<std::vector<in
     return free_fours;
 }
 
-int evaluate_board(const std::vector<std::vector<int>>& board, int player, int currentPlayer) {
+std::set<std::pair<int, int>> detect_capture_moves(const std::vector<std::vector<int>>& board, int player) {
+    int SIZE = board.size();
+    std::set<std::pair<int, int>> capture_moves;
+    int opponent = (player == 1 ? 2 : 1);
+    const int directions[4][2] = {
+        {1, 0},
+        {0, 1},
+        {1, 1},
+        {1, -1}
+    };
+
+    for (int y = 0; y < SIZE; ++y) {
+        for (int x = 0; x < SIZE; ++x) {
+            if (board[y][x] != 0)
+                continue;
+            for (auto& dir : directions) {
+                int nx1 = x + dir[0];
+                int ny1 = y + dir[1];
+                int nx2 = x + 2 * dir[0];
+                int ny2 = y + 2 * dir[1];
+                int nx3 = x + 3 * dir[0];
+                int ny3 = y + 3 * dir[1];
+                if (nx3 >= 0 && nx3 < SIZE && ny3 >= 0 && ny3 < SIZE &&
+                    board[ny1][nx1] == opponent &&
+                    board[ny2][nx2] == opponent &&
+                    board[ny3][nx3] == player) {
+                    capture_moves.insert({y, x});
+                }
+            }
+        }
+    }
+    return capture_moves;
+}
+
+
+int evaluate_board(const std::vector<std::vector<int>>& board, int player, int currentPlayer, int my_captures, int opp_captures) {
     int opponent = (player == 1 ? 2 : 1);
     int my_score = evaluate_player(board, player);
     int opp_score = evaluate_player(board, opponent);
     if (my_score >= 1000000)
         return 10000000;
     if (opp_score >= 1000000)
+        return -10000000;
+
+    if (my_captures >= 5)
+        return 10000000;
+    if (opp_captures >= 5)
         return -10000000;
 
     int opp_free_threes = count_free_threes(board, opponent);
@@ -502,10 +542,10 @@ int evaluate_board(const std::vector<std::vector<int>>& board, int player, int c
 bool checkCapturePair(const std::vector<std::vector<int>>& board, int x, int y, int player) {
     int SIZE = board.size();
     const int directions[4][2] = {
-        {1, 0},   // horizontal
-        {0, 1},   // vertical
-        {1, 1},   // diagonal gauche droite
-        {1, -1}   // diagonal droite gauche
+        {1, 0},
+        {0, 1},   
+        {1, 1},
+        {1, -1}
     };
 
     int opponent = (player == 1 ? 2 : 1);
@@ -513,7 +553,6 @@ bool checkCapturePair(const std::vector<std::vector<int>>& board, int x, int y, 
     for (auto& dir : directions) {
         int count = 0;
 
-        // FORWARD
         for (int i = 1; i < 4; ++i) {
             int nx = x + dir[0] * i;
             int ny = y + dir[1] * i;
@@ -525,7 +564,6 @@ bool checkCapturePair(const std::vector<std::vector<int>>& board, int x, int y, 
                 break;
         }
 
-        // BACKWARD
         count = 0;
         for (int i = 1; i < 4; ++i) {
             int nx = x - dir[0] * i;
@@ -586,10 +624,10 @@ bool checkDoubleFreeThree(const std::vector<std::vector<int>>& board, int x, int
 
     int count = 0;
     const int directions[4][2] = {
-        {1, 0},   // horizontal
-        {0, 1},   // vertical
-        {1, 1},   // diagonal gauche droite
-        {1, -1}   // diagonal droite gauche
+        {1, 0},
+        {0, 1},
+        {1, 1},
+        {1, -1}
     };
 
     for (auto& direction : directions) {
