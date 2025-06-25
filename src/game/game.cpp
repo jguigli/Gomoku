@@ -1,16 +1,40 @@
 #include "../../includes/game.hpp"
 
 
-Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false)
+Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(PLAYER_VS_PLAYER), _difficulty(NORMAL), _backToMenu(false)
 {
-    _resetButton = { BOARD_WIDTH / 2 - 60, BOARD_HEIGHT - 25, 120, 40 };
-    _agent = new Agent(10, CELL_WHITE);
+    _resetButton = { BOARD_WIDTH / 2 - 120, BOARD_HEIGHT - 25, 100, 40 };
+    _menuButton = { BOARD_WIDTH / 2 + 20, BOARD_HEIGHT - 25, 100, 40 };
+    _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE);
     std::cout<< "CELL_WHITE : " << CELL_WHITE << std::endl;
+    _turnStartTime = std::chrono::high_resolution_clock::now();
+}
+
+Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(gameMode), _difficulty(difficulty), _backToMenu(false)
+{
+    _resetButton = { BOARD_WIDTH / 2 - 120, BOARD_HEIGHT - 25, 100, 40 };
+    _menuButton = { BOARD_WIDTH - 150, BOARD_HEIGHT - 25, 100, 40 };
+    _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE);
+    _agentActive = (gameMode == PLAYER_VS_AI);
+    std::cout<< "Game mode: " << (_gameMode == PLAYER_VS_AI ? "Player vs AI" : "Player vs Player") << std::endl;
+    std::cout<< "Difficulty level: " << static_cast<int>(_difficulty) << std::endl;
     _turnStartTime = std::chrono::high_resolution_clock::now();
 }
 
 Game::~Game() {
     delete _agent;
+}
+
+void Game::setGameMode(GameMode gameMode, Difficulty difficulty) {
+    _gameMode = gameMode;
+    _difficulty = difficulty;
+    _agentActive = (gameMode == PLAYER_VS_AI);
+    
+    // Update agent with new difficulty
+    delete _agent;
+    _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE);
+    
+    reset(); // Reset the game state
 }
 
 void Game::reset()
@@ -204,6 +228,10 @@ void Game::update()
         {
             reset();
         }
+        else if (CheckCollisionPointRec(mouse, _menuButton))
+        {
+            _backToMenu = true;
+        }
         else if (mouse.y < BOARD_HEIGHT)
         {
             int x = round((mouse.x - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
@@ -231,9 +259,6 @@ void Game::update()
             }
         }
     }
-
-    if (IsKeyPressed(KEY_I))
-        _agentActive = !_agentActive;
 
     if (_agentActive && !_blackTurn)
     {
@@ -272,6 +297,13 @@ void Game::render()
     int textX = _resetButton.x + (_resetButton.width - textWidth) / 2;
     int textY = _resetButton.y + (_resetButton.height - textHeight) / 2;
     DrawText(btnText, textX, textY, fontSize, DARKGRAY);
+    
+    DrawRectangleRec(_menuButton, ORANGE);
+    const char* menuText = "Menu";
+    int menuTextWidth = MeasureText(menuText, fontSize);
+    int menuTextX = _menuButton.x + (_menuButton.width - menuTextWidth) / 2;
+    int menuTextY = _menuButton.y + (_menuButton.height - textHeight) / 2;
+    DrawText(menuText, menuTextX, menuTextY, fontSize, WHITE);
     
     int evaluatedScore = _board.getEvaluation();
     char evalText[64];
