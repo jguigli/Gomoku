@@ -16,3 +16,5 @@ std::set<std::pair<int, int>> detect_immediate_wins(const std::vector<std::vecto
 std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::vector<int>>& board, int opponent);
 std::set<std::pair<int, int>> detect_free_threes(const std::vector<std::vector<int>>& board, int player);
 std::set<std::pair<int, int>> detect_free_fours(const std::vector<std::vector<int>>& board, int player);
+bool is_crossed_threat(const std::vector<std::vector<int>>& board, int y, int x, int player);
+bool is_crossed_win(const std::vector<std::vector<int>>& board, int y, int x, int player);

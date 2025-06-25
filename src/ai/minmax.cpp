@@ -30,8 +30,27 @@ std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<in
     auto free_threes = detect_free_threes(board, player);
     for (const auto& pos : free_threes)
         moves.insert(pos);
-      
+    
+    // std::vector<std::pair<int, int>> filtered_moves;
+    // for (auto& move : moves) {
+    //     if (!is_crossed_threat(board, move.first, move.second, player))
+    //         filtered_moves.push_back(move);
+    // }
+
+    // if (filtered_moves.empty()) {
+    //     std::vector<std::pair<int, int>> crossed_win_moves;
+    //     for (auto& move : moves) {
+    //         auto tmp = board;
+    //         tmp[move.first][move.second] = player;
+    //         if (is_crossed_win(tmp, move.first, move.second, player))
+    //             crossed_win_moves.push_back(move);
+    //     }
+    //     if (!crossed_win_moves.empty())
+    //         return crossed_win_moves;    
+    // }
     return std::vector<std::pair<int, int>>(moves.begin(), moves.end());
+
+    // return filtered_moves;
 }
 
 int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int player) {
@@ -42,6 +61,9 @@ int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int 
     int score = 0;
     auto tmp = board;
     tmp[y][x] = player;
+
+    // if (is_crossed_win(tmp, y, x, player))
+    //     return 100000000;
 
     int eval_player = evaluate_player(tmp, player);
     if (eval_player >= 1000000)
