@@ -15,6 +15,14 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
         for (int x = 0; x < gridSize; ++x)
             intBoard[y][x] = board[y][x];
 
+    std::cout << "board is: "<< std::endl;
+    for (const auto& row : intBoard) {
+        for (int cell : row) {
+            std::cout << cell << " ";
+        }
+        std::cout << std::endl;
+    }
+
     int bestY = -1, bestX = -1, bestScore = std::numeric_limits<int>::min();
     int currentDepth = 1;
 
@@ -107,26 +115,21 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             moves.resize(5);
 
         for (auto [y, x] : moves) {
-            // Validate move before evaluating
-            if (!checkDoubleFreeThree(intBoard, x, y, iaCell) || 
-                (checkDoubleFreeThree(intBoard, x, y, iaCell) && checkCapturePair(intBoard, x, y, iaCell))) {
-                
-                intBoard[y][x] = iaCell;
-                bool localTimeout = false;
-                int score = minimax(intBoard, currentDepth, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
-                                    true, iaCell, iaCell, turnStart, maxTimeMs, localTimeout);
-                intBoard[y][x] = 0;
-                if (localTimeout) {
-                    std::cout << "Timeout reached at depth " << currentDepth << std::endl;
-                    timeout = true;
-                    break;
-                }
-                if (score > localBestScore || localBestY == -1) {
-                    std::cout << "New best move found at depth " << currentDepth << ": (" << y << ", " << x << ") with score " << score << std::endl;
-                    localBestScore = score;
-                    localBestY = y;
-                    localBestX = x;
-                }
+            intBoard[y][x] = iaCell;
+            bool localTimeout = false;
+            int score = minimax(intBoard, currentDepth, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
+                                true, iaCell, iaCell, turnStart, maxTimeMs, localTimeout);
+            intBoard[y][x] = 0;
+            if (localTimeout) {
+                std::cout << "Timeout reached at depth " << currentDepth << std::endl;
+                timeout = true;
+                break;
+            }
+            if (score > localBestScore || localBestY == -1) {
+                std::cout << "New best move found at depth " << currentDepth << ": (" << y << ", " << x << ") with score " << score << std::endl;
+                localBestScore = score;
+                localBestY = y;
+                localBestX = x;
             }
         }
         if (!timeout) {

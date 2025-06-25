@@ -596,6 +596,8 @@ bool checkDoubleFreeThree(const std::vector<std::vector<int>>& board, int x, int
         if (spotFreeThreePattern(board, x, y, direction[0], direction[1], player))
             count++;
     }
+    if (count >=2)
+        std::cout << "double free three detected for AI" << std::endl;
 
     return count >= 2;
 }
