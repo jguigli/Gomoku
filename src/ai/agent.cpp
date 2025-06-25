@@ -1,4 +1,4 @@
-#include "../includes/agent.hpp"
+#include "../../includes/agent.hpp"
 
 Agent::Agent(int depth, Cell iaCell) : depth(depth), iaCell(iaCell) {}
 

@@ -1,4 +1,4 @@
-#include "../includes/heuristic.hpp"
+#include "../../includes/heuristic.hpp"
 
 
 static std::unordered_map<std::string, int> pattern_table = {

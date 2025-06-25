@@ -1,4 +1,4 @@
-#include "../includes/minmax.hpp"
+#include "../../includes/minmax.hpp"
 
 std::unordered_map<std::string, int> transposition_table;
 
