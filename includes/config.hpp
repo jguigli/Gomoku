@@ -2,7 +2,7 @@
 
 enum Cell { CELL_EMPTY, CELL_BLACK, CELL_WHITE };
 
-constexpr int SCREEN_WIDTH = 800;
+constexpr int SCREEN_WIDTH = 1050;
 constexpr int SCREEN_HEIGHT = 850;
 
 constexpr int BOARD_WIDTH = 800;

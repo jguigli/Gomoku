@@ -16,6 +16,7 @@ class Board
 		void reset();
 		bool isInsideGrid(int x, int y) const;
 		Cell getCell(int x, int y) const;
+		void setCell(int x, int y, Cell cell);
 		void emptyCell(int x, int y);
 		int getEvaluation();
 		const std::vector<std::vector<Cell>>& getGrid() const;

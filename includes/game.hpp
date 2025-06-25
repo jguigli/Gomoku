@@ -5,6 +5,14 @@
 #include "agent.hpp"
 #include "menu.hpp"
 #include <chrono>
+#include <vector>
+
+struct Move {
+	int x;
+	int y;
+	Cell stone;
+	int moveNumber;
+};
 
 class Game
 {
@@ -21,6 +29,7 @@ class Game
 		bool checkDoubleFreeThree(int x, int y, Player stone);
 		bool spotFreeThreePattern(int x, int y, int dx, int dy, Player stone);
 		bool handlePlayerMove(int x, int y, Player currentPlayer);
+		void displayInfo();
 
 	private:
 		Board _board;
@@ -29,6 +38,8 @@ class Game
 		Player _whiteStone;
 		Rectangle _resetButton;
 		Rectangle _menuButton;
+		Rectangle _backwardButton;
+		Rectangle _forwardButton;
 		Agent* _agent;
 		bool _agentActive;
 		GameMode _gameMode;
@@ -37,6 +48,16 @@ class Game
 		float _elapsedMs = 0.0f;
 		float _iaElapsedMs = 0.0f;
 		bool _backToMenu;
+		bool _gameOver;
+		
+		// Move history
+		std::vector<Move> _moveHistory;
+		int _currentMoveIndex;
+		bool _reviewMode;
+		
+		void addMoveToHistory(int x, int y, Cell stone);
+		void navigateToMove(int moveIndex);
+		void drawMoveHighlight();
 		
 	public:
 		bool shouldReturnToMenu() const { return _backToMenu; }
