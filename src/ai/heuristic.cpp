@@ -498,3 +498,104 @@ int evaluate_board(const std::vector<std::vector<int>>& board, int player, int c
         return my_score - (opp_score * 2);
     }
 }
+
+bool checkCapturePair(const std::vector<std::vector<int>>& board, int x, int y, int player) {
+    int SIZE = board.size();
+    const int directions[4][2] = {
+        {1, 0},   // horizontal
+        {0, 1},   // vertical
+        {1, 1},   // diagonal gauche droite
+        {1, -1}   // diagonal droite gauche
+    };
+
+    int opponent = (player == 1 ? 2 : 1);
+
+    for (auto& dir : directions) {
+        int count = 0;
+
+        // FORWARD
+        for (int i = 1; i < 4; ++i) {
+            int nx = x + dir[0] * i;
+            int ny = y + dir[1] * i;
+            if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[ny][nx] == opponent)
+                count++;
+            else if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[ny][nx] == player && count == 2)
+                return true;
+            else
+                break;
+        }
+
+        // BACKWARD
+        count = 0;
+        for (int i = 1; i < 4; ++i) {
+            int nx = x - dir[0] * i;
+            int ny = y - dir[1] * i;
+            if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[ny][nx] == opponent)
+                count++;
+            else if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[ny][nx] == player && count == 2)
+                return true;
+            else
+                break;
+        }
+    }
+    return false;
+}
+
+bool spotFreeThreePattern(const std::vector<std::vector<int>>& board, int x, int y, int dx, int dy, int player) {
+    int SIZE = board.size();
+    std::string pattern;
+    const std::vector<std::string> validPatterns = {
+        "_OOO_", "_O_OO_", "_OO_O_",
+    };
+
+    for (int i = -4; i <= 4; ++i) {
+        int nx = x + i * dx;
+        int ny = y + i * dy;
+
+        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+            pattern += "X";
+            continue;
+        }
+
+        if (nx == x && ny == y) {
+            pattern += "O";
+            continue;
+        }
+
+        int cell = board[ny][nx];
+        if (cell == 0)
+            pattern += "_";
+        else if (cell == player)
+            pattern += "O";
+        else
+            pattern += "X";
+    }
+
+    for (const auto& p : validPatterns) {
+        if (pattern.find(p) != std::string::npos)
+            return true;
+    }
+
+    return false;
+}
+
+bool checkDoubleFreeThree(const std::vector<std::vector<int>>& board, int x, int y, int player) {
+    int SIZE = board.size();
+    if (x < 0 || x >= SIZE || y < 0 || y >= SIZE)
+        return false;
+
+    int count = 0;
+    const int directions[4][2] = {
+        {1, 0},   // horizontal
+        {0, 1},   // vertical
+        {1, 1},   // diagonal gauche droite
+        {1, -1}   // diagonal droite gauche
+    };
+
+    for (auto& direction : directions) {
+        if (spotFreeThreePattern(board, x, y, direction[0], direction[1], player))
+            count++;
+    }
+
+    return count >= 2;
+}

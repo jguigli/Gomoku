@@ -31,26 +31,19 @@ std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<in
     for (const auto& pos : free_threes)
         moves.insert(pos);
     
-    // std::vector<std::pair<int, int>> filtered_moves;
-    // for (auto& move : moves) {
-    //     if (!is_crossed_threat(board, move.first, move.second, player))
-    //         filtered_moves.push_back(move);
-    // }
+    std::vector<std::pair<int, int>> filtered_moves;
+    for (auto& move : moves) {
+        if (!checkDoubleFreeThree(board, move.second, move.first, player) || 
+            (checkDoubleFreeThree(board, move.second, move.first, player) && checkCapturePair(board, move.second, move.first, player))) {
+            filtered_moves.push_back(move);
+        }
+    }
 
-    // if (filtered_moves.empty()) {
-    //     std::vector<std::pair<int, int>> crossed_win_moves;
-    //     for (auto& move : moves) {
-    //         auto tmp = board;
-    //         tmp[move.first][move.second] = player;
-    //         if (is_crossed_win(tmp, move.first, move.second, player))
-    //             crossed_win_moves.push_back(move);
-    //     }
-    //     if (!crossed_win_moves.empty())
-    //         return crossed_win_moves;    
-    // }
-    return std::vector<std::pair<int, int>>(moves.begin(), moves.end());
-
-    // return filtered_moves;
+    if (filtered_moves.empty()) {
+        return std::vector<std::pair<int, int>>(moves.begin(), moves.end());
+    }
+    
+    return filtered_moves;
 }
 
 int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int player) {

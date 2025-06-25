@@ -117,6 +117,82 @@ bool Game::checkCapturePair(int x, int y, Player stone)
     return false;
 }
 
+bool Game::spotFreeThreePattern(int x, int y, int dx, int dy, Player stone)
+{
+	std::string pattern;
+	const std::vector<std::string> validPatterns = {
+		"_OOO_", "_O_OO_", "_OO_O_",
+	};
+
+	for (int i = -4; i <= 4; ++i)
+	{
+		int nx = x + i * dx;
+		int ny = y + i * dy;
+
+		if (!_board.isInsideGrid(nx, ny))
+		{
+			pattern += "X";
+			continue;
+		}
+
+		if (nx == x && ny == y)
+		{
+			pattern += "O";
+			continue;
+		}
+
+		Cell pos = _board.getCell(nx, ny);
+		if (pos == CELL_EMPTY)
+			pattern += "_";
+		else if (pos == stone.getStoneColor())
+			pattern += "O";
+		else
+			pattern += "X";
+	}
+
+	for (const auto& p : validPatterns)
+	{
+		if (pattern.find(p) != std::string::npos)
+			return true;
+	}
+
+	return false;
+}
+
+bool Game::checkDoubleFreeThree(int x, int y, Player stone)
+{
+    const int directions[4][2] = {
+        {1, 0},   // horizontal
+        {0, 1},   // vertical
+        {1, 1},   // diagonal gauche droite
+        {1, -1}   // diagonal droite gauche
+    };
+    
+	if (!_board.isInsideGrid(x, y))
+		return false;
+
+	int count = 0;
+
+	for (auto& direction : directions)
+	{
+		if (spotFreeThreePattern(x, y, direction[0], direction[1], stone))
+			count++;
+	}
+
+	return count >= 2;
+}
+
+bool Game::handlePlayerMove(int x, int y, Player currentPlayer)
+{
+    if (!checkDoubleFreeThree(x, y, currentPlayer) || 
+        (checkDoubleFreeThree(x, y, currentPlayer) && checkCapturePair(x, y, currentPlayer)))
+    {
+        if (_board.placePiece(x, y, currentPlayer))
+            return true;
+    }
+    return false;
+}
+
 void Game::update()
 {
 
@@ -134,7 +210,7 @@ void Game::update()
             int y = round((mouse.y - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
             
             Player currentPlayer = _blackTurn ? _blackStone : _whiteStone;
-            if (_board.placePiece(x, y, currentPlayer))
+            if (handlePlayerMove(x, y, currentPlayer))
             {
                 auto now = std::chrono::high_resolution_clock::now();
                 _elapsedMs = std::chrono::duration<float, std::milli>(now - _turnStartTime).count();
