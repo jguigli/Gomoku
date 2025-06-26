@@ -13,6 +13,7 @@ struct Move {
 	int y;
 	Cell stone;
 	int moveNumber;
+	std::vector<std::pair<int, int>> capturedStones; // Store captured stone positions
 };
 
 class Game
@@ -34,6 +35,7 @@ class Game
 
 	private:
 		Board _board;
+		Board _reviewBoard; // Separate board for review mode
 		bool _blackTurn;
 		Player _blackStone;
 		Player _whiteStone;
@@ -56,9 +58,11 @@ class Game
 		int _currentMoveIndex;
 		bool _reviewMode;
 		
-		void addMoveToHistory(int x, int y, Cell stone);
+		void addMoveToHistory(int x, int y, Cell stone, const std::vector<std::pair<int, int>>& capturedStones = {});
 		void navigateToMove(int moveIndex);
 		void drawMoveHighlight();
+		void enterReviewMode();
+		void exitReviewMode();
 		
 	public:
 		bool shouldReturnToMenu() const { return _backToMenu; }

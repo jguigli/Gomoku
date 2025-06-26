@@ -27,42 +27,67 @@ Game::~Game() {
     delete _agent;
 }
 
-void Game::addMoveToHistory(int x, int y, Cell stone) {
+void Game::addMoveToHistory(int x, int y, Cell stone, const std::vector<std::pair<int, int>>& capturedStones) {
     Move move;
     move.x = x;
     move.y = y;
     move.stone = stone;
     move.moveNumber = _moveHistory.size() + 1;
+    move.capturedStones = capturedStones;
     _moveHistory.push_back(move);
     _currentMoveIndex = _moveHistory.size() - 1;
 }
 
-void Game::navigateToMove(int moveIndex) {
-    if (moveIndex < -1 || moveIndex >= static_cast<int>(_moveHistory.size())) {
-        return;
-    }
-    
-    _currentMoveIndex = moveIndex;
-    _reviewMode = (moveIndex < static_cast<int>(_moveHistory.size()) - 1);
-    
-    // Reconstruct board state up to the specified move
-    _board.reset();
-    for (int i = 0; i <= moveIndex; i++) {
-        Move& move = _moveHistory[i];
-        _board.setCell(move.x, move.y, move.stone);
+void Game::enterReviewMode() {
+    if (!_reviewMode)
+    {
+        _reviewBoard = _board;
+        _reviewMode = true;
     }
 }
 
-void Game::setGameMode(GameMode gameMode, Difficulty difficulty) {
+void Game::exitReviewMode()
+{
+    if (_reviewMode)
+        _reviewMode = false;
+}
+
+void Game::navigateToMove(int moveIndex)
+{
+    if (moveIndex < -1 || moveIndex >= static_cast<int>(_moveHistory.size()))
+        return;
+    
+    if (!_reviewMode)
+        enterReviewMode();
+    
+    _currentMoveIndex = moveIndex;
+    
+    if (moveIndex == static_cast<int>(_moveHistory.size()) - 1)
+        exitReviewMode();
+    
+
+    _reviewBoard.reset();
+    for (int i = 0; i <= moveIndex; i++) {
+        Move& move = _moveHistory[i];
+        _reviewBoard.setCell(move.x, move.y, move.stone);
+        
+        // Remove captured stones for this move
+        for (const auto& capturedPos : move.capturedStones) {
+            _reviewBoard.emptyCell(capturedPos.first, capturedPos.second);
+        }
+    }
+}
+
+void Game::setGameMode(GameMode gameMode, Difficulty difficulty)
+{
     _gameMode = gameMode;
     _difficulty = difficulty;
     _agentActive = (gameMode == PLAYER_VS_AI);
     
-    // Update agent with new difficulty
     delete _agent;
     _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE, _blackStone, _whiteStone);
     
-    reset(); // Reset the game state
+    reset();
 }
 
 void Game::reset()
@@ -129,6 +154,7 @@ bool Game::checkCapturePair(int x, int y, Player& stone)
     };
 
     Cell opponentStone = stone.getStoneColor() == CELL_BLACK ? CELL_WHITE : CELL_BLACK;
+    std::vector<std::pair<int, int>> capturedStones;
 
     for (auto& dir : directions)
     {
@@ -145,8 +171,22 @@ bool Game::checkCapturePair(int x, int y, Player& stone)
             {
                 _board.emptyCell(x + dir[0] * (i - 1), y + dir[1] * (i - 1));
                 _board.emptyCell(x + dir[0] * (i - 2), y + dir[1] * (i - 2));
+                
+                capturedStones.push_back({x + dir[0] * (i - 1), y + dir[1] * (i - 1)});
+                capturedStones.push_back({x + dir[0] * (i - 2), y + dir[1] * (i - 2)});
+                
                 stone.addCapturedPair();
                 std::cout << "Capture" << std::endl;
+                
+                // Update the last move in history with captured stones
+                if (!_moveHistory.empty())
+                {
+                    _moveHistory.back().capturedStones.insert(
+                        _moveHistory.back().capturedStones.end(),
+                        capturedStones.begin(),
+                        capturedStones.end()
+                    );
+                }
                 return true;
             }
             else
@@ -164,7 +204,21 @@ bool Game::checkCapturePair(int x, int y, Player& stone)
             {
                 _board.emptyCell(x - dir[0] * (i - 1), y - dir[1] * (i - 1));
                 _board.emptyCell(x - dir[0] * (i - 2), y - dir[1] * (i - 2));
+                
+                capturedStones.push_back({x - dir[0] * (i - 1), y - dir[1] * (i - 1)});
+                capturedStones.push_back({x - dir[0] * (i - 2), y - dir[1] * (i - 2)});
+                
                 stone.addCapturedPair();
+                
+                // Update the last move in history with captured stones
+                if (!_moveHistory.empty())
+                {
+                    _moveHistory.back().capturedStones.insert(
+                        _moveHistory.back().capturedStones.end(),
+                        capturedStones.begin(),
+                        capturedStones.end()
+                    );
+                }
                 return true;
             }
             else
@@ -308,7 +362,7 @@ void Game::update()
     }
 
     if (_reviewMode && _currentMoveIndex == static_cast<int>(_moveHistory.size()) - 1) {
-        _reviewMode = false;
+        exitReviewMode();
     }
 
     if (_agentActive && !_blackTurn && !_reviewMode && !_gameOver)
@@ -505,22 +559,31 @@ void Game::displayInfo()
     }
 }
 
-void Game::drawMoveHighlight() {
+void Game::drawMoveHighlight()
+{
     if (_reviewMode && _currentMoveIndex >= 0 && _currentMoveIndex < static_cast<int>(_moveHistory.size())) {
         Move& currentMove = _moveHistory[_currentMoveIndex];
         
-        int screenX = BOARD_MARGIN + currentMove.x * CELL_SIZE;
-        int screenY = BOARD_MARGIN + currentMove.y * CELL_SIZE;
-        
-        DrawCircleLines(screenX, screenY, 12, YELLOW);
-        DrawCircleLines(screenX, screenY, 13, YELLOW);
+        int drawX = BOARD_MARGIN + currentMove.x * CELL_SIZE;
+        int drawY = BOARD_MARGIN + currentMove.y * CELL_SIZE;
+        DrawRectangleLines(drawX - CELL_SIZE/2, drawY - CELL_SIZE/2, 
+                            CELL_SIZE, CELL_SIZE, YELLOW);
     }
 }
 
 void Game::render()
 {
-    _board.drawBoard();
-    _board.drawPieces();
+    if (_reviewMode)
+    {
+        _reviewBoard.drawBoard();
+        _reviewBoard.drawPieces();
+    }
+    else
+    {
+        _board.drawBoard();
+        _board.drawPieces();
+    }
+    
     drawMoveHighlight();
     displayInfo();
 }
