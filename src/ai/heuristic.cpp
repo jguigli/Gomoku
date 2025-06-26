@@ -181,6 +181,10 @@ std::set<std::pair<int, int>> detect_immediate_wins(const std::vector<std::vecto
 
     for (int y = 0; y < SIZE; ++y) {
         for (int x = 0; x < SIZE; ++x) {
+
+            if (checkCapturePair(board, x, y, player))
+                wins.insert({y, x});
+            
             for (auto [dx, dy] : directions) {
                 for (const auto& pat : patterns) {
                     int len = pat.size();
@@ -238,6 +242,10 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
         for (int x = 0; x < SIZE; ++x) {
             if (is_crossed_threat(board, y, x, opponent))
                 threats.insert({y, x});
+
+            if (checkCapturePair(board, x, y, opponent))
+                threats.insert({y, x});
+
             for (auto [dx, dy] : directions) {
                 for (const auto& pat : patterns) {
                     int len = pat.size();

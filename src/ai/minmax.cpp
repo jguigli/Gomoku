@@ -2,7 +2,7 @@
 
 std::unordered_map<std::string, int> transposition_table;
 
-std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<int>>& board, int player, int my_captures, int opp_captures) {
+std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<int>>& board, int player) {
     int SIZE = board.size();
     int margin = 1;
     std::set<std::pair<int, int>> moves;
@@ -27,16 +27,20 @@ std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<in
             }
         }
     }
+
+    auto capture_moves = detect_capture_moves(board, player);
+        for (const auto& pos : capture_moves)
+            moves.insert(pos);
+
     auto free_threes = detect_free_threes(board, player);
     for (const auto& pos : free_threes)
         moves.insert(pos);
 
-    if (my_captures >= 2 || opp_captures >= 2) {
-        auto capture_moves = detect_capture_moves(board, player);
-        for (const auto& pos : capture_moves)
-            moves.insert(pos);
-    }
-    
+    int opponent = (player == 1 ? 2 : 1);
+    auto capture_threats = detect_capture_moves(board, opponent);
+    for (const auto& pos : capture_threats)
+        moves.insert(pos);
+
     std::vector<std::pair<int, int>> filtered_moves;
     for (auto& move : moves) {
         if (!checkDoubleFreeThree(board, move.second, move.first, player) || 
@@ -116,7 +120,6 @@ std::vector<std::pair<int, int>> simulate_capture(std::vector<std::vector<int>>&
         int ny3 = y + 3*dir[0], nx3 = x + 3*dir[1];
         if (ny3 >= 0 && ny3 < SIZE && nx3 >= 0 && nx3 < SIZE) {
             if (board[ny1][nx1] == opponent && board[ny2][nx2] == opponent && board[ny3][nx3] == player) {
-                // Capture!
                 captured_positions.emplace_back(ny1, nx1);
                 captured_positions.emplace_back(ny2, nx2);
                 board[ny1][nx1] = 0;
@@ -156,11 +159,11 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     if (it != transposition_table.end()) {
         return it->second;
     }
-    auto moves = generate_moves(board, player, my_captures, opp_captures);
-    if (moves.size() > 3)
-        moves.resize(3);
+    auto moves = generate_moves(board, player);
+    if (moves.size() > 7)
+        moves.resize(7);
     
-    if (depth == 0 || generate_moves(board, player, my_captures, opp_captures).empty()) {
+    if (depth == 0 || generate_moves(board, player).empty()) {
         int eval = evaluate_board(board, player, currentPlayer, my_captures, opp_captures);
         transposition_table[hash] = eval;
         return eval;

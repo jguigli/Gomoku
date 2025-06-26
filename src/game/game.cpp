@@ -289,6 +289,10 @@ bool Game::checkDoubleFreeThree(int x, int y, Player stone)
 		if (spotFreeThreePattern(x, y, direction[0], direction[1], stone))
 			count++;
 	}
+    if (count >= 2)
+    {
+        std::cout << "Double free three detected at (" << x << ", " << y << ")" << std::endl;
+    }
 
 	return count >= 2;
 }
