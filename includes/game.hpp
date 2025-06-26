@@ -26,7 +26,7 @@ class Game
 		void reset();
 		void setGameMode(GameMode gameMode, Difficulty difficulty);
 		bool checkFiveStonesAligned(int x, int y, Player stone);
-		bool checkCapturePair(int x, int y, Player stone);
+		bool checkCapturePair(int x, int y, Player& stone);
 		bool checkDoubleFreeThree(int x, int y, Player stone);
 		bool spotFreeThreePattern(int x, int y, int dx, int dy, Player stone);
 		bool handlePlayerMove(int x, int y, Player currentPlayer);

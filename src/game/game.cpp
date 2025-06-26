@@ -119,7 +119,7 @@ bool Game::checkFiveStonesAligned(int x, int y, Player stone)
     return false;
 }
 
-bool Game::checkCapturePair(int x, int y, Player stone)
+bool Game::checkCapturePair(int x, int y, Player& stone)
 {
     const int directions[4][2] = {
         {1, 0},   // horizontal
@@ -146,6 +146,7 @@ bool Game::checkCapturePair(int x, int y, Player stone)
                 _board.emptyCell(x + dir[0] * (i - 1), y + dir[1] * (i - 1));
                 _board.emptyCell(x + dir[0] * (i - 2), y + dir[1] * (i - 2));
                 stone.addCapturedPair();
+                std::cout << "Capture" << std::endl;
                 return true;
             }
             else
@@ -279,7 +280,7 @@ void Game::update()
             int x = round((mouse.x - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
             int y = round((mouse.y - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
             
-            Player currentPlayer = _blackTurn ? _blackStone : _whiteStone;
+            Player& currentPlayer = _blackTurn ? _blackStone : _whiteStone;
             if (handlePlayerMove(x, y, currentPlayer))
             {
                 addMoveToHistory(x, y, currentPlayer.getStoneColor());
@@ -306,7 +307,6 @@ void Game::update()
         }
     }
 
-    // Exit review mode when at the latest move
     if (_reviewMode && _currentMoveIndex == static_cast<int>(_moveHistory.size()) - 1) {
         _reviewMode = false;
     }

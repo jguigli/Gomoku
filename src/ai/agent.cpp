@@ -23,7 +23,7 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
         int my_captures = _whiteStone.getPairCaptured();
         int opp_captures = _blackStone.getPairCaptured();
         int localBestY = bestY, localBestX = bestX, localBestScore = bestScore;
-        auto moves = generate_moves(intBoard, iaCell);
+        auto moves = generate_moves(intBoard, iaCell, my_captures, opp_captures);
         std::cout << "Generated moves: " << std::endl;
         for (const auto& move : moves) {
             std::cout << "(" << move.first << ", " << move.second << ") ";

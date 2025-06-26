@@ -22,3 +22,4 @@ bool is_crossed_win(const std::vector<std::vector<int>>& board, int y, int x, in
 bool checkCapturePair(const std::vector<std::vector<int>>& board, int x, int y, int player);
 bool spotFreeThreePattern(const std::vector<std::vector<int>>& board, int x, int y, int dx, int dy, int player);
 bool checkDoubleFreeThree(const std::vector<std::vector<int>>& board, int x, int y, int player);
+std::set<std::pair<int, int>> detect_capture_moves(const std::vector<std::vector<int>>& board, int player);

@@ -2,7 +2,7 @@
 
 std::unordered_map<std::string, int> transposition_table;
 
-std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<int>>& board, int player) {
+std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<int>>& board, int player, int my_captures, int opp_captures) {
     int SIZE = board.size();
     int margin = 1;
     std::set<std::pair<int, int>> moves;
@@ -30,6 +30,12 @@ std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<in
     auto free_threes = detect_free_threes(board, player);
     for (const auto& pos : free_threes)
         moves.insert(pos);
+
+    if (my_captures >= 2 || opp_captures >= 2) {
+        auto capture_moves = detect_capture_moves(board, player);
+        for (const auto& pos : capture_moves)
+            moves.insert(pos);
+    }
     
     std::vector<std::pair<int, int>> filtered_moves;
     for (auto& move : moves) {
@@ -150,11 +156,11 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     if (it != transposition_table.end()) {
         return it->second;
     }
-    auto moves = generate_moves(board, player);
+    auto moves = generate_moves(board, player, my_captures, opp_captures);
     if (moves.size() > 3)
         moves.resize(3);
     
-    if (depth == 0 || generate_moves(board, player).empty()) {
+    if (depth == 0 || generate_moves(board, player, my_captures, opp_captures).empty()) {
         int eval = evaluate_board(board, player, currentPlayer, my_captures, opp_captures);
         transposition_table[hash] = eval;
         return eval;
