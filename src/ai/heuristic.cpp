@@ -547,11 +547,14 @@ int evaluate_board(const std::vector<std::vector<int>>& board, int player, int c
     }
 }
 
+
 bool checkCapturePair(const std::vector<std::vector<int>>& board, int x, int y, int player) {
+    if (board[y][x] != 0)
+        return false;
     int SIZE = board.size();
     const int directions[4][2] = {
         {1, 0},
-        {0, 1},   
+        {0, 1},
         {1, 1},
         {1, -1}
     };
@@ -559,33 +562,43 @@ bool checkCapturePair(const std::vector<std::vector<int>>& board, int x, int y, 
     int opponent = (player == 1 ? 2 : 1);
 
     for (auto& dir : directions) {
-        int count = 0;
+        int nx1 = x + dir[0];
+        int ny1 = y + dir[1];
+        int nx2 = x + 2 * dir[0];
+        int ny2 = y + 2 * dir[1];
+        int nx3 = x + 3 * dir[0];
+        int ny3 = y + 3 * dir[1];
 
-        for (int i = 1; i < 4; ++i) {
-            int nx = x + dir[0] * i;
-            int ny = y + dir[1] * i;
-            if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[ny][nx] == opponent)
-                count++;
-            else if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[ny][nx] == player && count == 2)
+        if (nx1 >= 0 && nx1 < SIZE && ny1 >= 0 && ny1 < SIZE &&
+            nx2 >= 0 && nx2 < SIZE && ny2 >= 0 && ny2 < SIZE &&
+            nx3 >= 0 && nx3 < SIZE && ny3 >= 0 && ny3 < SIZE) {
+            if (board[ny1][nx1] == opponent &&
+                board[ny2][nx2] == opponent &&
+                board[ny3][nx3] == player) {
                 return true;
-            else
-                break;
+            }
         }
 
-        count = 0;
-        for (int i = 1; i < 4; ++i) {
-            int nx = x - dir[0] * i;
-            int ny = y - dir[1] * i;
-            if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[ny][nx] == opponent)
-                count++;
-            else if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[ny][nx] == player && count == 2)
+        nx1 = x - dir[0];
+        ny1 = y - dir[1];
+        nx2 = x - 2 * dir[0];
+        ny2 = y - 2 * dir[1];
+        nx3 = x - 3 * dir[0];
+        ny3 = y - 3 * dir[1];
+
+        if (nx1 >= 0 && nx1 < SIZE && ny1 >= 0 && ny1 < SIZE &&
+            nx2 >= 0 && nx2 < SIZE && ny2 >= 0 && ny2 < SIZE &&
+            nx3 >= 0 && nx3 < SIZE && ny3 >= 0 && ny3 < SIZE) {
+            if (board[ny1][nx1] == opponent &&
+                board[ny2][nx2] == opponent &&
+                board[ny3][nx3] == player) {
                 return true;
-            else
-                break;
+            }
         }
     }
     return false;
 }
+
 
 bool spotFreeThreePattern(const std::vector<std::vector<int>>& board, int x, int y, int dx, int dy, int player) {
     int SIZE = board.size();
@@ -642,8 +655,9 @@ bool checkDoubleFreeThree(const std::vector<std::vector<int>>& board, int x, int
         if (spotFreeThreePattern(board, x, y, direction[0], direction[1], player))
             count++;
     }
-    if (count >=2)
-        std::cout << "double free three detected for AI" << std::endl;
+    if (count >= 2) {
+        std::cout << "Double free three detected for AI at (" << x << ", " << y << ")" << std::endl;
+    }
 
     return count >= 2;
 }

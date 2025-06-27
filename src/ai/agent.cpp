@@ -49,11 +49,6 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             }
             if (!threat_moves.empty())
                 moves = threat_moves;
-            std:: cout << "Detected threats here: " << std::endl;
-            for (const auto& move : threat_moves) {
-                std::cout << "(" << move.first << ", " << move.second << ") ";  
-                std::cout << std::endl;
-            }
         }
 
 
@@ -92,6 +87,7 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             int score = move_priority(intBoard, move.first, move.second, iaCell);
             move_scores.emplace_back(move.first, move.second, score);
             std::cout << "Move (" << move.first << ", " << move.second << ") score: " << score << std::endl;
+        }
 
         std::sort(move_scores.begin(), move_scores.end(),
             [](const auto& a, const auto& b) {
@@ -101,7 +97,6 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
         moves.clear();
         for (auto& tup : move_scores)
             moves.emplace_back(std::get<0>(tup), std::get<1>(tup));
-}
         if (moves.size() > 7)
             moves.resize(7);
 

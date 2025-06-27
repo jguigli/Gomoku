@@ -144,88 +144,64 @@ bool Game::checkFiveStonesAligned(int x, int y, Player stone)
     return false;
 }
 
+
 bool Game::checkCapturePair(int x, int y, Player& stone)
 {
     const int directions[4][2] = {
-        {1, 0},   // horizontal
-        {0, 1},   // vertical
-        {1, 1},   // diagonal gauche droite
-        {1, -1}   // diagonal droite gauche
+        {1, 0},
+        {0, 1},
+        {1, 1},
+        {1, -1}
     };
-
-    Cell opponentStone = stone.getStoneColor() == CELL_BLACK ? CELL_WHITE : CELL_BLACK;
-    std::vector<std::pair<int, int>> capturedStones;
+    
+    Cell myStone = stone.getStoneColor();
+    Cell opponentStone = (myStone == CELL_BLACK ? CELL_WHITE : CELL_BLACK);
+    
+    bool captured = false;
 
     for (auto& dir : directions)
     {
-        int count = 0;
+        int nx1 = x + dir[0];
+        int ny1 = y + dir[1];
+        int nx2 = x + 2 * dir[0];
+        int ny2 = y + 2 * dir[1];
+        int nx3 = x + 3 * dir[0];
+        int ny3 = y + 3 * dir[1];
 
-        // FORWARD
-        for (int i = 1; i < 4; ++i)
+        if (_board.isInsideGrid(nx1, ny1) && _board.isInsideGrid(nx2, ny2) && _board.isInsideGrid(nx3, ny3))
         {
-            int nx = x + dir[0] * i;
-            int ny = y + dir[1] * i;
-            if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == opponentStone)
-                count++;
-            else if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == stone.getStoneColor() && count == 2)
+            if (_board.getCell(nx1, ny1) == opponentStone &&
+                _board.getCell(nx2, ny2) == opponentStone &&
+                _board.getCell(nx3, ny3) == myStone)
             {
-                _board.emptyCell(x + dir[0] * (i - 1), y + dir[1] * (i - 1));
-                _board.emptyCell(x + dir[0] * (i - 2), y + dir[1] * (i - 2));
-                
-                capturedStones.push_back({x + dir[0] * (i - 1), y + dir[1] * (i - 1)});
-                capturedStones.push_back({x + dir[0] * (i - 2), y + dir[1] * (i - 2)});
-                
+                _board.emptyCell(nx1, ny1);
+                _board.emptyCell(nx2, ny2);
                 stone.addCapturedPair();
-                std::cout << "Capture" << std::endl;
-                
-                // Update the last move in history with captured stones
-                if (!_moveHistory.empty())
-                {
-                    _moveHistory.back().capturedStones.insert(
-                        _moveHistory.back().capturedStones.end(),
-                        capturedStones.begin(),
-                        capturedStones.end()
-                    );
-                }
-                return true;
+                captured = true;
             }
-            else
-                break;
         }
 
-        // BACKWARD
-        for (int i = 1; i < 5; ++i)
+        nx1 = x - dir[0];
+        ny1 = y - dir[1];
+        nx2 = x - 2 * dir[0];
+        ny2 = y - 2 * dir[1];
+        nx3 = x - 3 * dir[0];
+        ny3 = y - 3 * dir[1];
+
+        if (_board.isInsideGrid(nx1, ny1) && _board.isInsideGrid(nx2, ny2) && _board.isInsideGrid(nx3, ny3))
         {
-            int nx = x - dir[0] * i;
-            int ny = y - dir[1] * i;
-            if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == opponentStone)
-                count++;
-            else if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == stone.getStoneColor() && count == 2)
+            if (_board.getCell(nx1, ny1) == opponentStone &&
+                _board.getCell(nx2, ny2) == opponentStone &&
+                _board.getCell(nx3, ny3) == myStone)
             {
-                _board.emptyCell(x - dir[0] * (i - 1), y - dir[1] * (i - 1));
-                _board.emptyCell(x - dir[0] * (i - 2), y - dir[1] * (i - 2));
-                
-                capturedStones.push_back({x - dir[0] * (i - 1), y - dir[1] * (i - 1)});
-                capturedStones.push_back({x - dir[0] * (i - 2), y - dir[1] * (i - 2)});
-                
+                _board.emptyCell(nx1, ny1);
+                _board.emptyCell(nx2, ny2);
                 stone.addCapturedPair();
-                
-                // Update the last move in history with captured stones
-                if (!_moveHistory.empty())
-                {
-                    _moveHistory.back().capturedStones.insert(
-                        _moveHistory.back().capturedStones.end(),
-                        capturedStones.begin(),
-                        capturedStones.end()
-                    );
-                }
-                return true;
+                captured = true;
             }
-            else
-                break;
         }
     }
-    return false;
+    return captured;
 }
 
 bool Game::spotFreeThreePattern(int x, int y, int dx, int dy, Player stone)
@@ -297,15 +273,28 @@ bool Game::checkDoubleFreeThree(int x, int y, Player stone)
 	return count >= 2;
 }
 
-bool Game::handlePlayerMove(int x, int y, Player currentPlayer)
+// bool Game::handlePlayerMove(int x, int y, Player& currentPlayer)
+// {
+//     if (!checkDoubleFreeThree(x, y, currentPlayer) || 
+//         (checkDoubleFreeThree(x, y, currentPlayer) && checkCapturePair(x, y, currentPlayer)))
+//     {
+//         if (_board.placePiece(x, y, currentPlayer))
+//             return true;
+//     }
+//     return false;
+// }
+
+bool Game::handlePlayerMove(int x, int y, Player& currentPlayer)
 {
-    if (!checkDoubleFreeThree(x, y, currentPlayer) || 
-        (checkDoubleFreeThree(x, y, currentPlayer) && checkCapturePair(x, y, currentPlayer)))
-    {
-        if (_board.placePiece(x, y, currentPlayer))
-            return true;
-    }
-    return false;
+    if (checkDoubleFreeThree(x, y, currentPlayer))
+        return false;
+
+    if (!_board.placePiece(x, y, currentPlayer))
+        return false;
+
+    checkCapturePair(x, y, currentPlayer);
+
+    return true;
 }
 
 void Game::update()
