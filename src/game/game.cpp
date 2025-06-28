@@ -1,7 +1,7 @@
 #include "../../includes/game.hpp"
 
 
-Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(PLAYER_VS_PLAYER), _difficulty(NORMAL), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false)
+Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(PLAYER_VS_PLAYER), _difficulty(NORMAL), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false), _roundNumber(1)
 {
     _resetButton = { BOARD_WIDTH / 2 - 120, BOARD_HEIGHT - 25, 100, 40 };
     _menuButton = { BOARD_WIDTH / 2, BOARD_HEIGHT - 25, 100, 40 };
@@ -12,7 +12,7 @@ Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE
     _turnStartTime = std::chrono::high_resolution_clock::now();
 }
 
-Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(gameMode), _difficulty(difficulty), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false)
+Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(gameMode), _difficulty(difficulty), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false), _roundNumber(1)
 {
     _resetButton = { BOARD_WIDTH / 2 - 120, BOARD_HEIGHT - 25, 100, 40 };
     _menuButton = { BOARD_WIDTH / 2, BOARD_HEIGHT - 25, 100, 40 };
@@ -54,7 +54,7 @@ void Game::exitReviewMode()
 
 void Game::navigateToMove(int moveIndex)
 {
-    if (moveIndex < -1 || moveIndex >= static_cast<int>(_moveHistory.size()))
+    if (moveIndex < 0 || moveIndex >= static_cast<int>(_moveHistory.size()))
         return;
     
     if (!_reviewMode)
@@ -62,11 +62,14 @@ void Game::navigateToMove(int moveIndex)
     
     _currentMoveIndex = moveIndex;
     
-    if (moveIndex == static_cast<int>(_moveHistory.size()) - 1)
-        exitReviewMode();
-    
-
+    // Reconstruct review board state up to the specified move
     _reviewBoard.reset();
+    
+    if (moveIndex == static_cast<int>(_moveHistory.size()) - 1) {
+        exitReviewMode();
+    }
+    
+    // Replay all moves up to the specified index
     for (int i = 0; i <= moveIndex; i++) {
         Move& move = _moveHistory[i];
         _reviewBoard.setCell(move.x, move.y, move.stone);
@@ -76,6 +79,7 @@ void Game::navigateToMove(int moveIndex)
             _reviewBoard.emptyCell(capturedPos.first, capturedPos.second);
         }
     }
+    
 }
 
 void Game::setGameMode(GameMode gameMode, Difficulty difficulty)
@@ -100,10 +104,11 @@ void Game::reset()
     _currentMoveIndex = -1;
     _reviewMode = false;
     _gameOver = false;
+    _roundNumber = 1;
     _turnStartTime = std::chrono::high_resolution_clock::now();
 }
 
-bool Game::checkFiveStonesAligned(int x, int y, Player stone)
+bool Game::checkFiveStonesAligned(int x, int y, Player& stone)
 {
     const int directions[4][2] = {
         {1, 0},   // horizontal
@@ -158,6 +163,7 @@ bool Game::checkCapturePair(int x, int y, Player& stone)
     Cell opponentStone = (myStone == CELL_BLACK ? CELL_WHITE : CELL_BLACK);
     
     bool captured = false;
+    std::vector<std::pair<int, int>> capturedStones;
 
     for (auto& dir : directions)
     {
@@ -176,6 +182,8 @@ bool Game::checkCapturePair(int x, int y, Player& stone)
             {
                 _board.emptyCell(nx1, ny1);
                 _board.emptyCell(nx2, ny2);
+                capturedStones.push_back({nx1, ny1});
+                capturedStones.push_back({nx2, ny2});
                 stone.addCapturedPair();
                 captured = true;
             }
@@ -196,11 +204,23 @@ bool Game::checkCapturePair(int x, int y, Player& stone)
             {
                 _board.emptyCell(nx1, ny1);
                 _board.emptyCell(nx2, ny2);
+                capturedStones.push_back({nx1, ny1});
+                capturedStones.push_back({nx2, ny2});
                 stone.addCapturedPair();
                 captured = true;
             }
         }
     }
+    
+    // Update the last move in history with captured stones
+    if (captured && !_moveHistory.empty()) {
+        _moveHistory.back().capturedStones.insert(
+            _moveHistory.back().capturedStones.end(),
+            capturedStones.begin(),
+            capturedStones.end()
+        );
+    }
+    
     return captured;
 }
 
@@ -273,26 +293,78 @@ bool Game::checkDoubleFreeThree(int x, int y, Player stone)
 	return count >= 2;
 }
 
-// bool Game::handlePlayerMove(int x, int y, Player& currentPlayer)
-// {
-//     if (!checkDoubleFreeThree(x, y, currentPlayer) || 
-//         (checkDoubleFreeThree(x, y, currentPlayer) && checkCapturePair(x, y, currentPlayer)))
-//     {
-//         if (_board.placePiece(x, y, currentPlayer))
-//             return true;
-//     }
-//     return false;
-// }
+bool Game::checkCapturePairAndCollect(int x, int y, Player& stone, std::vector<std::pair<int, int>>& capturedStones)
+{
+    const int directions[4][2] = {
+        {1, 0},   // horizontal
+        {0, 1},   // vertical
+        {1, 1},   // diagonal gauche droite
+        {1, -1}   // diagonal droite gauche
+    };
+
+    Cell myStone = stone.getStoneColor();
+    Cell opponentStone = (myStone == CELL_BLACK ? CELL_WHITE : CELL_BLACK);
+    bool captured = false;
+
+    for (auto& dir : directions)
+    {
+        // Check forward direction
+        int nx1 = x + dir[0];
+        int ny1 = y + dir[1];
+        int nx2 = x + 2 * dir[0];
+        int ny2 = y + 2 * dir[1];
+        int nx3 = x + 3 * dir[0];
+        int ny3 = y + 3 * dir[1];
+
+        if (_board.isInsideGrid(nx1, ny1) && _board.isInsideGrid(nx2, ny2) && _board.isInsideGrid(nx3, ny3))
+        {
+            if (_board.getCell(nx1, ny1) == opponentStone &&
+                _board.getCell(nx2, ny2) == opponentStone &&
+                _board.getCell(nx3, ny3) == myStone)
+            {
+                _board.emptyCell(nx1, ny1);
+                _board.emptyCell(nx2, ny2);
+                capturedStones.push_back({nx1, ny1});
+                capturedStones.push_back({nx2, ny2});
+                stone.addCapturedPair();
+                captured = true;
+            }
+        }
+
+        // Check backward direction
+        nx1 = x - dir[0];
+        ny1 = y - dir[1];
+        nx2 = x - 2 * dir[0];
+        ny2 = y - 2 * dir[1];
+        nx3 = x - 3 * dir[0];
+        ny3 = y - 3 * dir[1];
+
+        if (_board.isInsideGrid(nx1, ny1) && _board.isInsideGrid(nx2, ny2) && _board.isInsideGrid(nx3, ny3))
+        {
+            if (_board.getCell(nx1, ny1) == opponentStone &&
+                _board.getCell(nx2, ny2) == opponentStone &&
+                _board.getCell(nx3, ny3) == myStone)
+            {
+                _board.emptyCell(nx1, ny1);
+                _board.emptyCell(nx2, ny2);
+                capturedStones.push_back({nx1, ny1});
+                capturedStones.push_back({nx2, ny2});
+                stone.addCapturedPair();
+                captured = true;
+            }
+        }
+    }
+    return captured;
+}
 
 bool Game::handlePlayerMove(int x, int y, Player& currentPlayer)
 {
-    if (checkDoubleFreeThree(x, y, currentPlayer))
+    std::cout << "Here currentPlayer: " << currentPlayer.getStoneColor() << std::endl;
+    if (checkDoubleFreeThree(x, y, currentPlayer) && !checkCapturePair(x, y, currentPlayer))
         return false;
 
     if (!_board.placePiece(x, y, currentPlayer))
         return false;
-
-    checkCapturePair(x, y, currentPlayer);
 
     return true;
 }
@@ -330,7 +402,13 @@ void Game::update()
             Player& currentPlayer = _blackTurn ? _blackStone : _whiteStone;
             if (handlePlayerMove(x, y, currentPlayer))
             {
-                addMoveToHistory(x, y, currentPlayer.getStoneColor());
+                // Check for captures and collect captured stone positions
+                std::vector<std::pair<int, int>> capturedStones;
+                if (checkCapturePairAndCollect(x, y, currentPlayer, capturedStones)) {
+                    addMoveToHistory(x, y, currentPlayer.getStoneColor(), capturedStones);
+                } else {
+                    addMoveToHistory(x, y, currentPlayer.getStoneColor());
+                }
                 
                 auto now = std::chrono::high_resolution_clock::now();
                 _elapsedMs = std::chrono::duration<float, std::milli>(now - _turnStartTime).count();
@@ -341,19 +419,24 @@ void Game::update()
                     std::cout << "GAME OVER" << std::endl;
                     _gameOver = true;
                 }
-                
-                checkCapturePair(x, y, currentPlayer);
                 if (currentPlayer.getPairCaptured() >= 5)
                 {
                     std::cout << "GAME OVER" << std::endl;
                     _gameOver = true;
                 }
                 _blackTurn = !_blackTurn;
+                
+
+                if (_blackTurn) { // We just switched from white to black, so white move was completed
+                    _roundNumber++;
+                }
+                
                 _turnStartTime = std::chrono::high_resolution_clock::now();
             }
         }
     }
 
+    // Auto-exit review mode when at the latest move
     if (_reviewMode && _currentMoveIndex == static_cast<int>(_moveHistory.size()) - 1) {
         exitReviewMode();
     }
@@ -364,23 +447,31 @@ void Game::update()
         auto result = _agent->play(boardVec);
         if (result.movePlayed)
         {
-            addMoveToHistory(result.x, result.y, CELL_WHITE);
-            
             _iaElapsedMs = result.elapsedMs;
             std::cout << "AI took : " << (int)_iaElapsedMs << " ms to play" << std::endl;
             _board.placePiece(result.x, result.y, _whiteStone);
+            
+            std::vector<std::pair<int, int>> capturedStones;
+            if (checkCapturePairAndCollect(result.x, result.y, _whiteStone, capturedStones)) {
+                addMoveToHistory(result.x, result.y, CELL_WHITE, capturedStones);
+            } else {
+                addMoveToHistory(result.x, result.y, CELL_WHITE);
+            }
+            
             if (checkFiveStonesAligned(result.x, result.y, _whiteStone))
             {
                 std::cout << "GAME OVER" << std::endl;
                 _gameOver = true;
             }
-            checkCapturePair(result.x, result.y, _whiteStone);
             if (_whiteStone.getPairCaptured() >= 5)
             {
                 std::cout << "GAME OVER" << std::endl;
                 _gameOver = true;
             }
             _blackTurn = !_blackTurn;
+            
+            _roundNumber++;
+            
             _turnStartTime = std::chrono::high_resolution_clock::now();
         }
     }
@@ -418,9 +509,14 @@ void Game::displayInfo()
     
     // Player scores and information panel
     float panelX = static_cast<float>(BOARD_WIDTH + 10);
-    float panelY = 50.0f;
+    float panelY = 70.0f;
     float panelWidth = static_cast<float>(SCREEN_WIDTH - BOARD_WIDTH - 20);
-    
+
+    // Round counter - displayed above Player 1 panel with larger font
+    char roundText[32];
+    snprintf(roundText, sizeof(roundText), "Round: %d", _roundNumber);
+    DrawText(roundText, static_cast<int>(panelX + 10), static_cast<int>(panelY - 40), 24, BLUE);
+
     // Player 1 (Black) score panel
     Rectangle player1Panel = { panelX, panelY, panelWidth, 120.0f };
     Color player1Color = _blackTurn ? Color{50, 50, 50, 200} : Color{30, 30, 30, 150};
@@ -479,7 +575,8 @@ void Game::displayInfo()
     }
     
     // Game mode and difficulty info
-    int infoY = static_cast<int>(panelY + 280);
+    int infoY = static_cast<int>(panelY + 300);
+    
     const char* modeText = _agentActive ? "Mode: Player vs AI" : "Mode: Player vs Player";
     DrawText(modeText, static_cast<int>(panelX + 10), infoY, 16, DARKGRAY);
     
@@ -548,7 +645,6 @@ void Game::displayInfo()
                 DrawText(playerWinnerText, static_cast<int>(panelX + 10), panelY + 230, 20, RED);
             }
         }
-
     }
 }
 

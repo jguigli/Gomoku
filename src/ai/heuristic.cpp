@@ -488,13 +488,32 @@ std::set<std::pair<int, int>> detect_capture_moves(const std::vector<std::vector
             if (board[y][x] != 0)
                 continue;
             for (auto& dir : directions) {
+                // Check forward direction
                 int nx1 = x + dir[0];
                 int ny1 = y + dir[1];
                 int nx2 = x + 2 * dir[0];
                 int ny2 = y + 2 * dir[1];
                 int nx3 = x + 3 * dir[0];
                 int ny3 = y + 3 * dir[1];
-                if (nx3 >= 0 && nx3 < SIZE && ny3 >= 0 && ny3 < SIZE &&
+                if (nx1 >= 0 && nx1 < SIZE && ny1 >= 0 && ny1 < SIZE &&
+                    nx2 >= 0 && nx2 < SIZE && ny2 >= 0 && ny2 < SIZE &&
+                    nx3 >= 0 && nx3 < SIZE && ny3 >= 0 && ny3 < SIZE &&
+                    board[ny1][nx1] == opponent &&
+                    board[ny2][nx2] == opponent &&
+                    board[ny3][nx3] == player) {
+                    capture_moves.insert({y, x});
+                }
+                
+                // Check backward direction
+                nx1 = x - dir[0];
+                ny1 = y - dir[1];
+                nx2 = x - 2 * dir[0];
+                ny2 = y - 2 * dir[1];
+                nx3 = x - 3 * dir[0];
+                ny3 = y - 3 * dir[1];
+                if (nx1 >= 0 && nx1 < SIZE && ny1 >= 0 && ny1 < SIZE &&
+                    nx2 >= 0 && nx2 < SIZE && ny2 >= 0 && ny2 < SIZE &&
+                    nx3 >= 0 && nx3 < SIZE && ny3 >= 0 && ny3 < SIZE &&
                     board[ny1][nx1] == opponent &&
                     board[ny2][nx2] == opponent &&
                     board[ny3][nx3] == player) {
@@ -562,6 +581,7 @@ bool checkCapturePair(const std::vector<std::vector<int>>& board, int x, int y, 
     int opponent = (player == 1 ? 2 : 1);
 
     for (auto& dir : directions) {
+        // Check forward direction
         int nx1 = x + dir[0];
         int ny1 = y + dir[1];
         int nx2 = x + 2 * dir[0];
@@ -579,6 +599,7 @@ bool checkCapturePair(const std::vector<std::vector<int>>& board, int x, int y, 
             }
         }
 
+        // Check backward direction
         nx1 = x - dir[0];
         ny1 = y - dir[1];
         nx2 = x - 2 * dir[0];

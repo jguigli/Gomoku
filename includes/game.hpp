@@ -26,8 +26,9 @@ class Game
 		void render();
 		void reset();
 		void setGameMode(GameMode gameMode, Difficulty difficulty);
-		bool checkFiveStonesAligned(int x, int y, Player stone);
+		bool checkFiveStonesAligned(int x, int y, Player& stone);
 		bool checkCapturePair(int x, int y, Player& stone);
+		bool checkCapturePairAndCollect(int x, int y, Player& stone, std::vector<std::pair<int, int>>& capturedStones);
 		bool checkDoubleFreeThree(int x, int y, Player stone);
 		bool spotFreeThreePattern(int x, int y, int dx, int dy, Player stone);
 		bool handlePlayerMove(int x, int y, Player& currentPlayer);
@@ -57,6 +58,7 @@ class Game
 		std::vector<Move> _moveHistory;
 		int _currentMoveIndex;
 		bool _reviewMode;
+		int _roundNumber; // Track complete rounds (black + white moves)
 		
 		void addMoveToHistory(int x, int y, Cell stone, const std::vector<std::pair<int, int>>& capturedStones = {});
 		void navigateToMove(int moveIndex);

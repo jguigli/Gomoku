@@ -114,12 +114,43 @@ std::vector<std::pair<int, int>> simulate_capture(std::vector<std::vector<int>>&
     int SIZE = board.size();
     int opponent = 3 - player;
     const int directions[4][2] = { {1,0},{0,1},{1,1},{1,-1} };
+    
     for (auto& dir : directions) {
-        int ny1 = y + dir[0], nx1 = x + dir[1];
-        int ny2 = y + 2*dir[0], nx2 = x + 2*dir[1];
-        int ny3 = y + 3*dir[0], nx3 = x + 3*dir[1];
-        if (ny3 >= 0 && ny3 < SIZE && nx3 >= 0 && nx3 < SIZE) {
-            if (board[ny1][nx1] == opponent && board[ny2][nx2] == opponent && board[ny3][nx3] == player) {
+        // Check forward direction
+        int nx1 = x + dir[0];
+        int ny1 = y + dir[1];
+        int nx2 = x + 2 * dir[0];
+        int ny2 = y + 2 * dir[1];
+        int nx3 = x + 3 * dir[0];
+        int ny3 = y + 3 * dir[1];
+        
+        if (nx1 >= 0 && nx1 < SIZE && ny1 >= 0 && ny1 < SIZE &&
+            nx2 >= 0 && nx2 < SIZE && ny2 >= 0 && ny2 < SIZE &&
+            nx3 >= 0 && nx3 < SIZE && ny3 >= 0 && ny3 < SIZE) {
+            if (board[ny1][nx1] == opponent &&
+                board[ny2][nx2] == opponent &&
+                board[ny3][nx3] == player) {
+                captured_positions.emplace_back(ny1, nx1);
+                captured_positions.emplace_back(ny2, nx2);
+                board[ny1][nx1] = 0;
+                board[ny2][nx2] = 0;
+            }
+        }
+        
+        // Check backward direction
+        nx1 = x - dir[0];
+        ny1 = y - dir[1];
+        nx2 = x - 2 * dir[0];
+        ny2 = y - 2 * dir[1];
+        nx3 = x - 3 * dir[0];
+        ny3 = y - 3 * dir[1];
+        
+        if (nx1 >= 0 && nx1 < SIZE && ny1 >= 0 && ny1 < SIZE &&
+            nx2 >= 0 && nx2 < SIZE && ny2 >= 0 && ny2 < SIZE &&
+            nx3 >= 0 && nx3 < SIZE && ny3 >= 0 && ny3 < SIZE) {
+            if (board[ny1][nx1] == opponent &&
+                board[ny2][nx2] == opponent &&
+                board[ny3][nx3] == player) {
                 captured_positions.emplace_back(ny1, nx1);
                 captured_positions.emplace_back(ny2, nx2);
                 board[ny1][nx1] = 0;
