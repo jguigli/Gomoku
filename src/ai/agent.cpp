@@ -24,11 +24,11 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
         int opp_captures = _blackStone.getPairCaptured();
         int localBestY = bestY, localBestX = bestX, localBestScore = bestScore;
         auto moves = generate_moves(intBoard, iaCell);
-        // std::cout << "Generated moves: " << std::endl;
-        // for (const auto& move : moves) {
-        //     std::cout << "(" << move.first << ", " << move.second << ") ";
-        // }
-        // std::cout << std::endl;
+        std::cout << "Generated moves: " << std::endl;
+        for (const auto& move : moves) {
+            std::cout << "(" << move.first << ", " << move.second << ") ";
+        }
+        std::cout << std::endl;
         auto wins = detect_immediate_wins(intBoard, iaCell);
         if (!wins.empty()) {
             auto [winY, winX] = *wins.begin();
@@ -76,17 +76,17 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             }
         }
 
-        // std::cout << "Current moves: " << std::endl;
-        // for (const auto& move : moves) {
-        //     std::cout << "(" << move.first << ", " << move.second << ") ";
-        // }
-        // std::cout << std::endl;
+        std::cout << "Current moves: " << std::endl;
+        for (const auto& move : moves) {
+            std::cout << "(" << move.first << ", " << move.second << ") ";
+        }
+        std::cout << std::endl;
 
         std::vector<std::tuple<int, int, int>> move_scores;
         for (auto& move : moves) {
-            int score = move_priority(intBoard, move.first, move.second, iaCell);
+            int score = move_priority(intBoard, move.first, move.second, iaCell, my_captures, opp_captures);
             move_scores.emplace_back(move.first, move.second, score);
-            // std::cout << "Move (" << move.first << ", " << move.second << ") score: " << score << std::endl;
+            std::cout << "Move (" << move.first << ", " << move.second << ") score: " << score << std::endl;
         }
 
         std::sort(move_scores.begin(), move_scores.end(),

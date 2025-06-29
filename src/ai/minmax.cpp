@@ -56,7 +56,7 @@ std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<in
     return filtered_moves;
 }
 
-int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int player) {
+int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int player, int my_captures, int opp_captures) {
     int SIZE = board.size();
     if (y < 0 || y >= SIZE || x < 0 || x >= SIZE || board[y][x] != 0)
         return 0;
@@ -75,6 +75,11 @@ int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int 
     if (eval_player >= 100000)
         return score += 100000;
 
+    auto captured_positions = simulate_capture(tmp, y, x, player);
+    int captured = captured_positions.size() / 2;
+    if (my_captures + captured >= 5)
+        return 90000000;
+
     tmp[y][x] = 0;
 
     tmp[y][x] = 3 - player;
@@ -83,6 +88,11 @@ int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int 
         return score += 9000000;
     else if (eval_opp >= 10000)
         return score += 900000;
+
+    auto opp_captured_positions = simulate_capture(tmp, y, x, 3 - player);
+    int opp_captured = opp_captured_positions.size() / 2;
+    if (opp_captures + opp_captured >= 5)
+        score += 8000000;
 
     tmp[y][x] = 0;
 
@@ -184,24 +194,33 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     if (!free_threes.empty())
         return maximizingPlayer ? 5000000 : -5000000;
 
-    std::string hash = board_to_string(board) + std::to_string(currentPlayer);
+    std::string hash = board_to_string(board) + std::to_string(currentPlayer) + std::to_string(my_captures) + std::to_string(opp_captures);
     auto it = transposition_table.find(hash);
     if (it != transposition_table.end()) {
         return it->second;
     }
     auto moves = generate_moves(board, player);
-    if (moves.size() > 7)
-        moves.resize(7);
     
-    if (depth == 0 || generate_moves(board, player).empty()) {
+    if (depth == 0 || moves.empty()) {
         int eval = evaluate_board(board, player, currentPlayer, my_captures, opp_captures);
         transposition_table[hash] = eval;
         return eval;
     }
 
-    std::sort(moves.begin(), moves.end(), [&](const std::pair<int, int>& a, const std::pair<int, int>& b) {
-        return move_priority(board, a.first, a.second, currentPlayer) > move_priority(board, b.first, b.second, currentPlayer);
-    });
+    std::vector<std::tuple<int, int, int>> move_scores;
+    for (auto& move : moves) {
+        int score = move_priority(board, move.first, move.second, currentPlayer, my_captures, opp_captures);
+        move_scores.emplace_back(move.first, move.second, score);
+    }
+
+    std::sort(move_scores.begin(), move_scores.end(),
+        [](const auto& a, const auto& b) {
+            return std::get<2>(a) > std::get<2>(b);
+        });
+
+    moves.clear();
+    for (size_t i = 0; i < move_scores.size() && i < 7; ++i)
+        moves.emplace_back(std::get<0>(move_scores[i]), std::get<1>(move_scores[i]));
 
     if (maximizingPlayer) {
         int maxEval = std::numeric_limits<int>::min();
