@@ -111,17 +111,16 @@ void Game::reset()
 bool Game::checkFiveStonesAligned(int x, int y, Player& stone)
 {
     const int directions[4][2] = {
-        {1, 0},   // horizontal
-        {0, 1},   // vertical
-        {1, 1},   // diagonal gauche droite
-        {1, -1}   // diagonal droite gauche
+        {1, 0},
+        {0, 1},
+        {1, 1},
+        {1, -1}
     };
 
     for (auto& dir : directions)
     {
         int count = 1;
 
-        // FORWARD
         for (int i = 1; i < 5; ++i)
         {
             int nx = x + dir[0] * i;
@@ -132,7 +131,6 @@ bool Game::checkFiveStonesAligned(int x, int y, Player& stone)
                 break;
         }
 
-        // BACKWARD
         for (int i = 1; i < 5; ++i)
         {
             int nx = x - dir[0] * i;
@@ -212,7 +210,6 @@ bool Game::checkCapturePair(int x, int y, Player& stone)
         }
     }
     
-    // Update the last move in history with captured stones
     if (captured && !_moveHistory.empty()) {
         _moveHistory.back().capturedStones.insert(
             _moveHistory.back().capturedStones.end(),
@@ -269,10 +266,10 @@ bool Game::spotFreeThreePattern(int x, int y, int dx, int dy, Player stone)
 bool Game::checkDoubleFreeThree(int x, int y, Player stone)
 {
     const int directions[4][2] = {
-        {1, 0},   // horizontal
-        {0, 1},   // vertical
-        {1, 1},   // diagonal gauche droite
-        {1, -1}   // diagonal droite gauche
+        {1, 0},
+        {0, 1},
+        {1, 1},
+        {1, -1}
     };
     
 	if (!_board.isInsideGrid(x, y))
@@ -296,10 +293,10 @@ bool Game::checkDoubleFreeThree(int x, int y, Player stone)
 bool Game::checkCapturePairAndCollect(int x, int y, Player& stone, std::vector<std::pair<int, int>>& capturedStones)
 {
     const int directions[4][2] = {
-        {1, 0},   // horizontal
-        {0, 1},   // vertical
-        {1, 1},   // diagonal gauche droite
-        {1, -1}   // diagonal droite gauche
+        {1, 0},
+        {0, 1},
+        {1, 1},
+        {1, -1}
     };
 
     Cell myStone = stone.getStoneColor();
@@ -308,7 +305,6 @@ bool Game::checkCapturePairAndCollect(int x, int y, Player& stone, std::vector<s
 
     for (auto& dir : directions)
     {
-        // Check forward direction
         int nx1 = x + dir[0];
         int ny1 = y + dir[1];
         int nx2 = x + 2 * dir[0];
@@ -331,7 +327,7 @@ bool Game::checkCapturePairAndCollect(int x, int y, Player& stone, std::vector<s
             }
         }
 
-        // Check backward direction
+
         nx1 = x - dir[0];
         ny1 = y - dir[1];
         nx2 = x - 2 * dir[0];
@@ -591,10 +587,10 @@ void Game::displayInfo()
     }
     
     // Performance info
-    int evaluatedScore = _board.getEvaluation();
-    char evalText[64];
-    snprintf(evalText, sizeof(evalText), "Board Evaluation: %d", evaluatedScore);
-    DrawText(evalText, static_cast<int>(panelX + 10), infoY + 55, 14, DARKGRAY);
+    // int evaluatedScore = _board.getEvaluation();
+    // char evalText[64];
+    // snprintf(evalText, sizeof(evalText), "Board Evaluation: %d", evaluatedScore);
+    // DrawText(evalText, static_cast<int>(panelX + 10), infoY + 55, 14, DARKGRAY);
     
     // Timer for current turn
     if (!_reviewMode) {

@@ -37,12 +37,12 @@ void Board::drawPieces() const
             int py = BOARD_MARGIN + y * CELL_SIZE;
             if (_grid[y][x] == CELL_BLACK)
             {
-                DrawCircle(px, py, CELL_SIZE / 3, BLACK);
+                DrawCircle(px, py, CELL_SIZE / 2.3, BLACK);
             }
             else if (_grid[y][x] == CELL_WHITE)
             {
-                DrawCircle(px, py, CELL_SIZE / 3, RAYWHITE);
-                DrawCircleLines(px, py, CELL_SIZE / 3, GRAY);
+                DrawCircle(px, py, CELL_SIZE / 2.3, RAYWHITE);
+                DrawCircleLines(px, py, CELL_SIZE / 2.3, GRAY);
             }
         }
     }

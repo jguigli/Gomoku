@@ -41,7 +41,7 @@ private:
     Difficulty _difficulty;
     bool _startGame;
     
-    // UI elements
+
     Rectangle _pvpButton;
     Rectangle _pvaButton;
     Rectangle _beginnerButton;

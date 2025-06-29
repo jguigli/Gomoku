@@ -116,7 +116,7 @@ std::vector<std::pair<int, int>> simulate_capture(std::vector<std::vector<int>>&
     const int directions[4][2] = { {1,0},{0,1},{1,1},{1,-1} };
     
     for (auto& dir : directions) {
-        // Check forward direction
+
         int nx1 = x + dir[0];
         int ny1 = y + dir[1];
         int nx2 = x + 2 * dir[0];
@@ -137,7 +137,6 @@ std::vector<std::pair<int, int>> simulate_capture(std::vector<std::vector<int>>&
             }
         }
         
-        // Check backward direction
         nx1 = x - dir[0];
         ny1 = y - dir[1];
         nx2 = x - 2 * dir[0];
