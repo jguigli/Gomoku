@@ -357,7 +357,6 @@ bool Game::checkCapturePairAndCollect(int x, int y, Player& stone, std::vector<s
 
 bool Game::handlePlayerMove(int x, int y, Player& currentPlayer)
 {
-    std::cout << "Here currentPlayer: " << currentPlayer.getStoneColor() << std::endl;
     if (checkDoubleFreeThree(x, y, currentPlayer) && !checkCapturePair(x, y, currentPlayer))
         return false;
 
@@ -464,17 +463,14 @@ void Game::update()
                 }
                 _blackTurn = !_blackTurn;
                 
-
-                if (_blackTurn) { // We just switched from white to black, so white move was completed
+                if (_blackTurn) {
                     _roundNumber++;
                 }
-                
                 _turnStartTime = std::chrono::high_resolution_clock::now();
             }
         }
     }
 
-    // Auto-exit review mode when at the latest move
     if (_reviewMode && _currentMoveIndex == static_cast<int>(_moveHistory.size()) - 1) {
         exitReviewMode();
     }

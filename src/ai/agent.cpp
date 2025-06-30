@@ -6,7 +6,7 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
     extern std::unordered_map<std::string, int> transposition_table;
 
     auto turnStart = std::chrono::high_resolution_clock::now();
-    float maxTimeMs = 499.0f;
+    float maxTimeMs = 500.0f;
     bool timeout = false;
 
     int gridSize = board.size();
@@ -24,13 +24,16 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
         int opp_captures = _blackStone.getPairCaptured();
         int localBestY = bestY, localBestX = bestX, localBestScore = bestScore;
         auto moves = generate_moves(intBoard, iaCell);
-        std::cout << "Generated moves: " << std::endl;
-        for (const auto& move : moves) {
-            std::cout << "(" << move.first << ", " << move.second << ") ";
-        }
-        std::cout << std::endl;
+        // std::cout << "Generated moves: " << std::endl;
+        // for (const auto& move : moves) {
+        //     std::cout << "(" << move.first << ", " << move.second << ") ";
+        // }
+        // std::cout << std::endl;
         auto wins = detect_immediate_wins(intBoard, iaCell);
         if (!wins.empty()) {
+            // std::cout << "Immediate win detected" << std::endl;
+            // for (const auto& pos : wins)
+            //     std::cout << "Win by agent at: (" << pos.first << ", " << pos.second << ")" << std::endl;
             auto [winY, winX] = *wins.begin();
             board[winY][winX] = iaCell;
             auto iaNow = std::chrono::high_resolution_clock::now();
@@ -76,17 +79,10 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             }
         }
 
-        std::cout << "Current moves: " << std::endl;
-        for (const auto& move : moves) {
-            std::cout << "(" << move.first << ", " << move.second << ") ";
-        }
-        std::cout << std::endl;
-
         std::vector<std::tuple<int, int, int>> move_scores;
         for (auto& move : moves) {
             int score = move_priority(intBoard, move.first, move.second, iaCell, my_captures, opp_captures);
             move_scores.emplace_back(move.first, move.second, score);
-            std::cout << "Move (" << move.first << ", " << move.second << ") score: " << score << std::endl;
         }
 
         std::sort(move_scores.begin(), move_scores.end(),
@@ -97,8 +93,8 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
         moves.clear();
         for (auto& tup : move_scores)
             moves.emplace_back(std::get<0>(tup), std::get<1>(tup));
-        if (moves.size() > 7)
-            moves.resize(7);
+        if (moves.size() > 8)
+            moves.resize(8);
 
         for (auto [y, x] : moves) {
             intBoard[y][x] = iaCell;
@@ -107,12 +103,10 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
                                 true, iaCell, iaCell, turnStart, maxTimeMs, localTimeout, my_captures, opp_captures);
             intBoard[y][x] = 0;
             if (localTimeout) {
-                std::cout << "Timeout reached at depth " << currentDepth << std::endl;
                 timeout = true;
                 break;
             }
             if (score > localBestScore || localBestY == -1) {
-                std::cout << "New best move found at depth " << currentDepth << ": (" << y << ", " << x << ") with score " << score << std::endl;
                 localBestScore = score;
                 localBestY = y;
                 localBestX = x;
@@ -123,7 +117,7 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             bestX = localBestX;
             bestScore = localBestScore;
             currentDepth++;
-            std::cout << "Depth: " << currentDepth - 1 << ", Best Move: (" << bestY << ", " << bestX << "), Score: " << bestScore << std::endl;
+            std::cout << "Depth reached: " << currentDepth - 1 << std::endl;
         }
         else
             break;
@@ -142,8 +136,9 @@ Agent::Result Agent::playHint(std::vector<std::vector<Cell>>& board, Cell player
     extern std::unordered_map<std::string, int> transposition_table;
 
     auto turnStart = std::chrono::high_resolution_clock::now();
-    float maxTimeMs = 499.0f;
+    float maxTimeMs = 1000.0f;
     bool timeout = false;
+    int depth = this->depth + 5;
 
     int gridSize = board.size();
     std::vector<std::vector<int>> intBoard(gridSize, std::vector<int>(gridSize, 0));
@@ -154,7 +149,6 @@ Agent::Result Agent::playHint(std::vector<std::vector<Cell>>& board, Cell player
     int bestY = -1, bestX = -1, bestScore = std::numeric_limits<int>::min();
     int currentDepth = 1;
 
-    // Utilise playerCell partout dans la logique (comme iaCell avant)
     while (currentDepth <= depth) {
         transposition_table.clear();
         int my_captures = (playerCell == CELL_BLACK) ? _blackStone.getPairCaptured() : _whiteStone.getPairCaptured();

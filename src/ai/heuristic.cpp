@@ -239,12 +239,6 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
 
     for (int y = 0; y < SIZE; ++y) {
         for (int x = 0; x < SIZE; ++x) {
-            if (is_crossed_free_three_and_four(board, y, x, opponent))
-                threats.insert({y, x});
-
-            if (checkCapturePair(board, x, y, opponent))
-                threats.insert({y, x});
-
             for (auto [dx, dy] : directions) {
                 for (const auto& pat : patterns) {
                     int len = pat.size();
@@ -277,9 +271,12 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
                     }
                     if (match && !empty_spots.empty()) {
                         for (auto pos : empty_spots)
-                            threats.insert(pos);
-                    }
+                        threats.insert(pos);
                 }
+            }
+
+            if (checkCapturePair(board, x, y, opponent))
+                threats.insert({y, x});
             }
         }
     }

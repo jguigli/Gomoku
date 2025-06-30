@@ -53,13 +53,6 @@ bool Board::placePiece(int x, int y, Player stone)
     if (isInsideGrid(x, y) && _grid[y][x] == CELL_EMPTY)
     {
         _grid[y][x] = stone.getStoneColor();
-        
-        // for (auto& row : _grid)
-        // {
-        //     for (int y = 0; y < 19; ++y)
-        //         std::cout << row[y];
-        //     std::cout << std::endl;
-        // }
 
         return true;
     }

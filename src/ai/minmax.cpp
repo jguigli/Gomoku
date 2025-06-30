@@ -171,6 +171,12 @@ std::vector<std::pair<int, int>> simulate_capture(std::vector<std::vector<int>>&
     return captured_positions;
 }
 
+int moves_to_keep(int depth) {
+    if (depth >= 3) return 4;
+    if (depth == 2) return 6;
+    return 8;
+}
+
 int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta, bool maximizingPlayer, int player, int currentPlayer, std::chrono::high_resolution_clock::time_point startTime, float maxTimeMs, bool& timeout, int my_captures, int opp_captures) {
     auto now = std::chrono::high_resolution_clock::now();
     float elapsed = std::chrono::duration<float, std::milli>(now - startTime).count();
@@ -180,40 +186,20 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     }
     auto wins = detect_immediate_wins(board, currentPlayer);
     if (!wins.empty())
-    {
-        std::cout << "Immediate win detected" << std::endl;
-        for (const auto& pos : wins)
-            std::cout << "Win at: (" << pos.first << ", " << pos.second << ")" << std::endl;
         return maximizingPlayer ? 10000000 : -10000000;
-    }
 
     int opponent = (currentPlayer == 1 ? 2 : 1);
     auto threats = detect_immediate_threats(board, opponent);
     if (!threats.empty())
-    {
-        std::cout << "Immediate threat detected" << std::endl;
-        for (const auto& pos : threats)
-            std::cout << "Threat at: (" << pos.first << ", " << pos.second << ")" << std::endl;
         return maximizingPlayer ? -9000000 : 9000000;
-    }
 
     auto free_fours = detect_free_fours(board, currentPlayer);
     if (!free_fours.empty())
-    {   
-        std::cout << "Free four detected" << std::endl;
-        for (const auto& pos : free_fours)
-            std::cout << "Free four at: (" << pos.first << ", " << pos.second << ")" << std::endl;
         return maximizingPlayer ? 8000000 : -8000000;
-    }
 
     auto free_threes = detect_free_threes(board, currentPlayer);
     if (!free_threes.empty())
-    {
-        std::cout << "Free three detected" << std::endl;
-        for (const auto& pos : free_threes)
-            std::cout << "Free three at: (" << pos.first << ", " << pos.second << ")" << std::endl;
         return maximizingPlayer ? 5000000 : -5000000;
-    }
 
     std::string hash = board_to_string(board) + std::to_string(currentPlayer) + std::to_string(my_captures) + std::to_string(opp_captures);
     auto it = transposition_table.find(hash);
@@ -235,12 +221,14 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     }
 
     std::sort(move_scores.begin(), move_scores.end(),
-        [](const auto& a, const auto& b) {
-            return std::get<2>(a) > std::get<2>(b);
+        [maximizingPlayer](const auto& a, const auto& b) {
+            return maximizingPlayer ? std::get<2>(a) > std::get<2>(b)
+                                : std::get<2>(a) < std::get<2>(b);
         });
 
     moves.clear();
-    for (size_t i = 0; i < move_scores.size() && i < 7; ++i)
+    int keep = moves_to_keep(depth);
+    for (size_t i = 0; i < move_scores.size() && i < (size_t)keep; ++i)
         moves.emplace_back(std::get<0>(move_scores[i]), std::get<1>(move_scores[i]));
 
     if (maximizingPlayer) {
@@ -268,7 +256,6 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
                 break;
         }
         transposition_table[hash] = maxEval;
-        std::cout << "Max evaluation: " << maxEval << std::endl;
         return maxEval;
     } else {
         int minEval = std::numeric_limits<int>::max();
