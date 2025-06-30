@@ -181,10 +181,6 @@ std::set<std::pair<int, int>> detect_immediate_wins(const std::vector<std::vecto
 
     for (int y = 0; y < SIZE; ++y) {
         for (int x = 0; x < SIZE; ++x) {
-
-            if (checkCapturePair(board, x, y, player))
-                wins.insert({y, x});
-            
             for (auto [dx, dy] : directions) {
                 for (const auto& pat : patterns) {
                     int len = pat.size();
@@ -216,6 +212,9 @@ std::set<std::pair<int, int>> detect_immediate_wins(const std::vector<std::vecto
                     }
                 }
             }
+
+            if (checkCapturePair(board, x, y, player))
+                wins.insert({y, x});
         }
     }
     return wins;
@@ -240,7 +239,7 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
 
     for (int y = 0; y < SIZE; ++y) {
         for (int x = 0; x < SIZE; ++x) {
-            if (is_crossed_threat(board, y, x, opponent))
+            if (is_crossed_free_three_and_four(board, y, x, opponent))
                 threats.insert({y, x});
 
             if (checkCapturePair(board, x, y, opponent))
@@ -287,105 +286,69 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
     return threats;
 }
 
-bool is_crossed_threat(const std::vector<std::vector<int>>& board, int y, int x, int player) {
+
+bool is_crossed_free_three_and_four(const std::vector<std::vector<int>>& board, int y, int x, int player) {
     if (board[y][x] != 0)
         return false;
     int SIZE = board.size();
     std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{-1,1}};
-    std::vector<int> free_four_pattern = {0, player, player, player, player, 0};
-    std::vector<int> free_three_pattern = {0, player, player, player, 0};
+    std::vector<std::vector<int>> free_three_patterns = {
+        {0, player, player, player, 0}
+    };
+    std::vector<std::vector<int>> four_patterns = {
+        {player, player, player, player},
+        {0, player, player, player, player},
+        {player, player, player, player, 0},
+        {0, player, player, player, player, 0}
+    };
 
-    int free_four_dirs = 0;
-    int free_three_dirs = 0;
+    bool found_free_three = false;
+    bool found_four = false;
 
     for (auto [dx, dy] : directions) {
+        for (int offset = -4; offset <= 0; ++offset) {
+            for (const auto& pat : free_three_patterns) {
+                bool match = true;
+                for (int k = 0; k < 5; ++k) {
+                    int nx = x + (offset + k) * dx;
+                    int ny = y + (offset + k) * dy;
+                    if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+                        match = false;
+                        break;
+                    }
+                    int cell = (nx == x && ny == y) ? player : board[ny][nx];
+                    if (cell != pat[k]) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match)
+                    found_free_three = true;
+            }
+        }
         for (int offset = -5; offset <= 0; ++offset) {
-            bool match = true;
-            for (int k = 0; k < 6; ++k) {
-                int nx = x + (offset + k) * dx;
-                int ny = y + (offset + k) * dy;
-                if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
-                    match = false;
-                    break;
-                }
-                int cell = (nx == x && ny == y) ? player : board[ny][nx];
-                if (free_four_pattern[k] == 0) {
-                    if (!((nx == x && ny == y) || cell == 0)) {
+            for (const auto& pat : four_patterns) {
+                int len = pat.size();
+                bool match = true;
+                for (int k = 0; k < len; ++k) {
+                    int nx = x + (offset + k) * dx;
+                    int ny = y + (offset + k) * dy;
+                    if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
                         match = false;
                         break;
                     }
-                } else if (cell != free_four_pattern[k]) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                free_four_dirs++;
-                break;
-            }
-        }
-        for (int offset = -4; offset <= 0; ++offset) {
-            bool match = true;
-            for (int k = 0; k < 5; ++k) {
-                int nx = x + (offset + k) * dx;
-                int ny = y + (offset + k) * dy;
-                if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
-                    match = false;
-                    break;
-                }
-                int cell = (nx == x && ny == y) ? player : board[ny][nx];
-                if (free_three_pattern[k] == 0) {
-                    if (!((nx == x && ny == y) || cell == 0)) {
+                    int cell = (nx == x && ny == y) ? player : board[ny][nx];
+                    if (cell != pat[k]) {
                         match = false;
                         break;
                     }
-                } else if (cell != free_three_pattern[k]) {
-                    match = false;
-                    break;
                 }
-            }
-            if (match) {
-                free_three_dirs++;
-                break;
+                if (match)
+                    found_four = true;
             }
         }
     }
-    if (free_four_dirs >= 2 || (free_four_dirs >= 1 && free_three_dirs >= 1))
-        return true;
-    return false;
-}
-
-bool is_crossed_win(const std::vector<std::vector<int>>& board, int y, int x, int player) {
-    if (board[y][x] != 0)
-        return false;
-    int SIZE = board.size();
-    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{-1,1}};
-    std::vector<int> win_pattern = {player, player, player, player, player};
-    int win_dirs = 0;
-
-    for (auto [dx, dy] : directions) {
-        for (int offset = -4; offset <= 0; ++offset) {
-            bool match = true;
-            for (int k = 0; k < 5; ++k) {
-                int nx = x + (offset + k) * dx;
-                int ny = y + (offset + k) * dy;
-                if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
-                    match = false;
-                    break;
-                }
-                int cell = (nx == x && ny == y) ? player : board[ny][nx];
-                if (cell != win_pattern[k]) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                win_dirs++;
-                break;
-            }
-        }
-    }
-    return win_dirs >= 2;
+    return found_free_three && found_four;
 }
 
 std::set<std::pair<int, int>> detect_free_threes(const std::vector<std::vector<int>>& board, int player) {

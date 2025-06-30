@@ -17,6 +17,7 @@ class Agent {
         };
 
         Result play(std::vector<std::vector<Cell>>& board);
+        Agent::Result playHint(std::vector<std::vector<Cell>>& board, Cell playerCell);
 
         void setDepth(int depth) { this->depth = depth; }
         void setCell (Cell iaCell) { this->iaCell = iaCell; }

@@ -7,6 +7,7 @@ Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE
     _menuButton = { BOARD_WIDTH / 2, BOARD_HEIGHT - 25, 100, 40 };
     _backwardButton = { BOARD_WIDTH / 2 - 220, BOARD_HEIGHT - 25, 40, 40 };
     _forwardButton = { BOARD_WIDTH / 2 + 150, BOARD_HEIGHT - 25, 40, 40 };
+    _hintButton = { BOARD_WIDTH / 2 + 120, BOARD_HEIGHT - 25, 100, 40 };
     _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE, _blackStone, _whiteStone);
     std::cout<< "CELL_WHITE : " << CELL_WHITE << std::endl;
     _turnStartTime = std::chrono::high_resolution_clock::now();
@@ -18,6 +19,7 @@ Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackS
     _menuButton = { BOARD_WIDTH / 2, BOARD_HEIGHT - 25, 100, 40 };
     _backwardButton = { BOARD_WIDTH / 2 - 220, BOARD_HEIGHT - 25, 40, 40 };
     _forwardButton = { BOARD_WIDTH / 2 + 150, BOARD_HEIGHT - 25, 40, 40 };
+    _hintButton = { BOARD_WIDTH / 2 + 120, BOARD_HEIGHT - 25, 100, 40 };
     _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE, _blackStone, _whiteStone);
     _agentActive = (gameMode == PLAYER_VS_AI);
     _turnStartTime = std::chrono::high_resolution_clock::now();
@@ -374,6 +376,20 @@ void Game::update()
         {
             reset();
         }
+        else if (CheckCollisionPointRec(mouse, _hintButton)) {
+            if (!_hintActive) {
+                auto boardVec = _board.getGrid();
+                Agent::Result hint = _agent->playHint(boardVec, _blackTurn ? CELL_BLACK : CELL_WHITE);
+                if (hint.movePlayed) {
+                    _hintX = hint.x;
+                    _hintY = hint.y;
+                    _hintActive = true;
+                }
+            } else {
+                _hintActive = false;
+                _hintX = _hintY = -1;
+            }
+        }
         else if (CheckCollisionPointRec(mouse, _menuButton))
         {
             _backToMenu = true;
@@ -396,9 +412,31 @@ void Game::update()
             int y = round((mouse.y - BOARD_MARGIN) / static_cast<float>(CELL_SIZE));
             
             Player& currentPlayer = _blackTurn ? _blackStone : _whiteStone;
+            if (_hintActive && x ==  _hintX && y == _hintY) {
+                handlePlayerMove(x, y, currentPlayer);
+                _hintActive = false;
+                _hintX = _hintY = -1;
+
+                std::vector<std::pair<int, int>> capturedStones;
+                if (checkCapturePairAndCollect(x, y, currentPlayer, capturedStones)) {
+                    addMoveToHistory(x, y, currentPlayer.getStoneColor(), capturedStones);
+                } else {
+                    addMoveToHistory(x, y, currentPlayer.getStoneColor());
+                }
+
+                auto now = std::chrono::high_resolution_clock::now();
+                _elapsedMs = std::chrono::duration<float, std::milli>(now - _turnStartTime).count();
+                _turnStartTime = now;
+                if (checkFiveStonesAligned(x, y, currentPlayer))
+                    _gameOver = true;
+                if (currentPlayer.getPairCaptured() >= 5)
+                    _gameOver = true;
+                _blackTurn = !_blackTurn;
+                if (_blackTurn) _roundNumber++;
+                return;
+            }
             if (handlePlayerMove(x, y, currentPlayer))
             {
-                // Check for captures and collect captured stone positions
                 std::vector<std::pair<int, int>> capturedStones;
                 if (checkCapturePairAndCollect(x, y, currentPlayer, capturedStones)) {
                     addMoveToHistory(x, y, currentPlayer.getStoneColor(), capturedStones);
@@ -419,6 +457,10 @@ void Game::update()
                 {
                     std::cout << "GAME OVER" << std::endl;
                     _gameOver = true;
+                }
+                if (_hintActive) {
+                    _hintActive = false;
+                    _hintX = _hintY = -1;
                 }
                 _blackTurn = !_blackTurn;
                 
@@ -492,6 +534,22 @@ void Game::displayInfo()
     int menuTextX = _menuButton.x + (_menuButton.width - menuTextWidth) / 2;
     int menuTextY = _menuButton.y + (_menuButton.height - textHeight) / 2;
     DrawText(menuText, menuTextX, menuTextY, fontSize, WHITE);
+
+
+    float panelXHint = static_cast<float>(BOARD_WIDTH + 10);
+    float panelYHint = 700.0f;
+    float panelWidthHint = static_cast<float>(SCREEN_WIDTH - BOARD_WIDTH - 100);
+
+    _hintButton.x = panelXHint;
+    _hintButton.y = panelYHint;
+    _hintButton.width = panelWidthHint;
+    _hintButton.height = 40;
+    DrawRectangleRec(_hintButton, DARKGREEN);
+    const char* hintText = "Hint";
+    int hintTextWidth = MeasureText(hintText, fontSize);
+    int hintTextX = _hintButton.x + (_hintButton.width - hintTextWidth) / 2;
+    int hintTextY = _hintButton.y + (_hintButton.height - fontSize) / 2;
+    DrawText(hintText, hintTextX, hintTextY, fontSize, WHITE);
     
     // Backward button
     Color backwardColor = (_currentMoveIndex > -1) ? DARKBLUE : GRAY;
@@ -667,6 +725,11 @@ void Game::render()
     {
         _board.drawBoard();
         _board.drawPieces();
+        if (_hintActive && _hintX >= 0 && _hintY >= 0) {
+            int drawX = BOARD_MARGIN + _hintX * CELL_SIZE;
+            int drawY = BOARD_MARGIN + _hintY * CELL_SIZE;
+            DrawCircle(drawX, drawY, CELL_SIZE / 2 - 4, DARKGREEN);
+}
     }
     
     drawMoveHighlight();

@@ -44,6 +44,9 @@ class Game
 		Rectangle _menuButton;
 		Rectangle _backwardButton;
 		Rectangle _forwardButton;
+		Rectangle _hintButton;
+		bool _hintActive = false;
+		int _hintX = -1, _hintY = -1;
 		Agent* _agent;
 		bool _agentActive;
 		GameMode _gameMode;

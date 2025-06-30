@@ -137,3 +137,123 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
     }
     return {-1, -1, 0, iaElapsedMs, false};
 }
+
+Agent::Result Agent::playHint(std::vector<std::vector<Cell>>& board, Cell playerCell) {
+    extern std::unordered_map<std::string, int> transposition_table;
+
+    auto turnStart = std::chrono::high_resolution_clock::now();
+    float maxTimeMs = 499.0f;
+    bool timeout = false;
+
+    int gridSize = board.size();
+    std::vector<std::vector<int>> intBoard(gridSize, std::vector<int>(gridSize, 0));
+    for (int y = 0; y < gridSize; ++y)
+        for (int x = 0; x < gridSize; ++x)
+            intBoard[y][x] = board[y][x];
+
+    int bestY = -1, bestX = -1, bestScore = std::numeric_limits<int>::min();
+    int currentDepth = 1;
+
+    // Utilise playerCell partout dans la logique (comme iaCell avant)
+    while (currentDepth <= depth) {
+        transposition_table.clear();
+        int my_captures = (playerCell == CELL_BLACK) ? _blackStone.getPairCaptured() : _whiteStone.getPairCaptured();
+        int opp_captures = (playerCell == CELL_BLACK) ? _whiteStone.getPairCaptured() : _blackStone.getPairCaptured();
+        int localBestY = bestY, localBestX = bestX, localBestScore = bestScore;
+        auto moves = generate_moves(intBoard, playerCell);
+
+        auto wins = detect_immediate_wins(intBoard, playerCell);
+        if (!wins.empty()) {
+            auto [winY, winX] = *wins.begin();
+            auto iaNow = std::chrono::high_resolution_clock::now();
+            float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
+            return {winY, winX, 10000000, iaElapsedMs, true};
+        }
+
+        int opponent = (playerCell == 1 ? 2 : 1);
+        auto threats = detect_immediate_threats(intBoard, opponent);
+
+        if (!threats.empty()) {
+            std::vector<std::pair<int, int>> threat_moves;
+            for (auto& move : moves) {
+                if (threats.count(move))
+                    threat_moves.push_back(move);
+            }
+            if (!threat_moves.empty())
+                moves = threat_moves;
+        }
+
+        auto free_fours = detect_free_fours(intBoard, playerCell);
+        if (!free_fours.empty()) {
+            std::vector<std::pair<int, int>> free_four_moves;
+            for (auto& move : moves) {
+                if (free_fours.count(move))
+                    free_four_moves.push_back(move);
+            }
+            if (!free_four_moves.empty()) {
+                moves = free_four_moves;
+            }
+        }
+
+        auto free_threes = detect_free_threes(intBoard, playerCell);
+        if (!free_threes.empty()) {
+            std::vector<std::pair<int, int>> free_three_moves;
+            for (auto& move : moves) {
+                if (free_threes.count(move))
+                    free_three_moves.push_back(move);
+            }
+            if (!free_three_moves.empty()) {
+                moves = free_three_moves;
+            }
+        }
+
+        std::vector<std::tuple<int, int, int>> move_scores;
+        for (auto& move : moves) {
+            int score = move_priority(intBoard, move.first, move.second, playerCell, my_captures, opp_captures);
+            move_scores.emplace_back(move.first, move.second, score);
+        }
+
+        std::sort(move_scores.begin(), move_scores.end(),
+            [](const auto& a, const auto& b) {
+                return std::get<2>(a) > std::get<2>(b);
+            });
+
+        moves.clear();
+        for (auto& tup : move_scores)
+            moves.emplace_back(std::get<0>(tup), std::get<1>(tup));
+        if (moves.size() > 7)
+            moves.resize(7);
+
+        for (auto [y, x] : moves) {
+            intBoard[y][x] = playerCell;
+            bool localTimeout = false;
+            int score = minimax(intBoard, currentDepth, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
+                                true, playerCell, playerCell, turnStart, maxTimeMs, localTimeout, my_captures, opp_captures);
+            intBoard[y][x] = 0;
+            if (localTimeout) {
+                timeout = true;
+                break;
+            }
+            if (score > localBestScore || localBestY == -1) {
+                localBestScore = score;
+                localBestY = y;
+                localBestX = x;
+            }
+        }
+        if (!timeout) {
+            bestY = localBestY;
+            bestX = localBestX;
+            bestScore = localBestScore;
+            currentDepth++;
+        }
+        else
+            break;
+    }
+    auto iaNow = std::chrono::high_resolution_clock::now();
+    float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
+
+    if (bestY != -1 && bestX != -1) {
+        return {bestY, bestX, bestScore, iaElapsedMs, true};
+    }
+    return {-1, -1, 0, iaElapsedMs, false};
+}

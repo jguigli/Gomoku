@@ -4,7 +4,6 @@ std::unordered_map<std::string, int> transposition_table;
 
 std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<int>>& board, int player) {
     int SIZE = board.size();
-    int margin = 1;
     std::set<std::pair<int, int>> moves;
     std::vector<std::pair<int, int>> stones;
 
@@ -16,15 +15,17 @@ std::vector<std::pair<int, int>> generate_moves(const std::vector<std::vector<in
     if (stones.empty()) {
         moves.emplace(SIZE/2, SIZE/2);
     } else {
+        int min_y = SIZE, max_y = 0, min_x = SIZE, max_x = 0;
         for (auto [sy, sx] : stones) {
-            for (int dy = -margin; dy <= margin; ++dy) {
-                for (int dx = -margin; dx <= margin; ++dx) {
-                    int ny = sy + dy;
-                    int nx = sx + dx;
-                    if (ny >= 0 && ny < SIZE && nx >= 0 && nx < SIZE && board[ny][nx] == 0)
-                        moves.emplace(ny, nx);
-                }
-            }
+            min_y = std::min(min_y, sy);
+            max_y = std::max(max_y, sy);
+            min_x = std::min(min_x, sx);
+            max_x = std::max(max_x, sx);
+        int margin = (stones.size() < 6) ? 2 : 1;
+        for (int y = std::max(0, min_y - margin); y <= std::min(SIZE - 1, max_y + margin); ++y)
+            for (int x = std::max(0, min_x - margin); x <= std::min(SIZE - 1, max_x + margin); ++x)
+                if (board[y][x] == 0)
+                    moves.emplace(y, x);
         }
     }
 
@@ -65,7 +66,7 @@ int move_priority(const std::vector<std::vector<int>>& board, int y, int x, int 
     auto tmp = board;
     tmp[y][x] = player;
 
-    if (is_crossed_win(tmp, y, x, player))
+    if (is_crossed_free_three_and_four(tmp, y, x, player))
         return 100000000;
 
     int eval_player = evaluate_player(tmp, player);
@@ -179,20 +180,40 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     }
     auto wins = detect_immediate_wins(board, currentPlayer);
     if (!wins.empty())
+    {
+        std::cout << "Immediate win detected" << std::endl;
+        for (const auto& pos : wins)
+            std::cout << "Win at: (" << pos.first << ", " << pos.second << ")" << std::endl;
         return maximizingPlayer ? 10000000 : -10000000;
+    }
 
     int opponent = (currentPlayer == 1 ? 2 : 1);
     auto threats = detect_immediate_threats(board, opponent);
     if (!threats.empty())
+    {
+        std::cout << "Immediate threat detected" << std::endl;
+        for (const auto& pos : threats)
+            std::cout << "Threat at: (" << pos.first << ", " << pos.second << ")" << std::endl;
         return maximizingPlayer ? -9000000 : 9000000;
+    }
 
     auto free_fours = detect_free_fours(board, currentPlayer);
     if (!free_fours.empty())
+    {   
+        std::cout << "Free four detected" << std::endl;
+        for (const auto& pos : free_fours)
+            std::cout << "Free four at: (" << pos.first << ", " << pos.second << ")" << std::endl;
         return maximizingPlayer ? 8000000 : -8000000;
+    }
 
     auto free_threes = detect_free_threes(board, currentPlayer);
     if (!free_threes.empty())
+    {
+        std::cout << "Free three detected" << std::endl;
+        for (const auto& pos : free_threes)
+            std::cout << "Free three at: (" << pos.first << ", " << pos.second << ")" << std::endl;
         return maximizingPlayer ? 5000000 : -5000000;
+    }
 
     std::string hash = board_to_string(board) + std::to_string(currentPlayer) + std::to_string(my_captures) + std::to_string(opp_captures);
     auto it = transposition_table.find(hash);
@@ -247,6 +268,7 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
                 break;
         }
         transposition_table[hash] = maxEval;
+        std::cout << "Max evaluation: " << maxEval << std::endl;
         return maxEval;
     } else {
         int minEval = std::numeric_limits<int>::max();
