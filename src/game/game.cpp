@@ -9,8 +9,8 @@ Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE
     _forwardButton = { BOARD_WIDTH / 2 + 150, BOARD_HEIGHT - 25, 40, 40 };
     _hintButton = { BOARD_WIDTH / 2 + 120, BOARD_HEIGHT - 25, 100, 40 };
     _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE, _blackStone, _whiteStone);
-    std::cout<< "CELL_WHITE : " << CELL_WHITE << std::endl;
     _turnStartTime = std::chrono::high_resolution_clock::now();
+    _lastAgentResult.depthReached = 0;
 }
 
 Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(gameMode), _difficulty(difficulty), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false), _roundNumber(1), _lastMove(false)
@@ -23,6 +23,7 @@ Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackS
     _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE, _blackStone, _whiteStone);
     _agentActive = (gameMode == PLAYER_VS_AI);
     _turnStartTime = std::chrono::high_resolution_clock::now();
+    _lastAgentResult.depthReached = 0;
 }
 
 Game::~Game() {
@@ -99,6 +100,7 @@ void Game::reset()
     _blackStone.resetPairCaptured();
     _whiteStone.resetPairCaptured();
     _moveHistory.clear();
+    _lastAgentResult.depthReached = 0;
     _currentMoveIndex = -1;
     _reviewMode = false;
     _gameOver = false;
@@ -506,7 +508,6 @@ void Game::update()
                 auto now = std::chrono::high_resolution_clock::now();
                 _elapsedMs = std::chrono::duration<float, std::milli>(now - _turnStartTime).count();
                 _turnStartTime = now;
-                std::cout << "Human player took : " << (int)_elapsedMs << " ms to play" << std::endl;
                 if (checkFiveStonesAligned(x, y, currentPlayer))
                     _lastMove = true;
                 
@@ -539,7 +540,6 @@ void Game::update()
         if (result.movePlayed)
         {
             _iaElapsedMs = result.elapsedMs;
-            std::cout << "AI took : " << (int)_iaElapsedMs << " ms to play" << std::endl;
             _board.placePiece(result.x, result.y, _whiteStone);
             
             std::vector<std::pair<int, int>> capturedStones;
@@ -572,6 +572,7 @@ void Game::update()
             _roundNumber++;
             
             _turnStartTime = std::chrono::high_resolution_clock::now();
+             _lastAgentResult = result;
         }
     }
 }
@@ -706,10 +707,12 @@ void Game::displayInfo()
     }
     
     // Performance info
-    // int evaluatedScore = _board.getEvaluation();
-    // char evalText[64];
-    // snprintf(evalText, sizeof(evalText), "Board Evaluation: %d", evaluatedScore);
-    // DrawText(evalText, static_cast<int>(panelX + 10), infoY + 55, 14, DARKGRAY);
+    int DepthReached = _lastAgentResult.depthReached;
+    if (_gameOver)
+            DepthReached = 0;
+    char evalText[64];
+    snprintf(evalText, sizeof(evalText), "Depth reached: %d", DepthReached);
+    DrawText(evalText, static_cast<int>(panelX + 10), infoY + 55, 14, DARKGRAY);
     
     // Timer for current turn
     if (!_reviewMode) {

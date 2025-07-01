@@ -12,6 +12,7 @@ class Agent {
             int     y;
             int     x;
             int     score;
+            int     depthReached;
             float   elapsedMs;
             bool    movePlayed;
         };

@@ -48,6 +48,7 @@ class Game
 		bool _hintActive = false;
 		int _hintX = -1, _hintY = -1;
 		Agent* _agent;
+		Agent::Result _lastAgentResult;
 		bool _agentActive;
 		GameMode _gameMode;
 		Difficulty _difficulty;

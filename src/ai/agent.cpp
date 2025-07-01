@@ -44,7 +44,7 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             auto [winY, winX, winScore] = win_scored.front();
             auto iaNow = std::chrono::high_resolution_clock::now();
             float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
-            return {winY, winX, winScore, iaElapsedMs, true};
+            return {winY, winX, winScore, currentDepth, iaElapsedMs, true};
         }
 
 
@@ -120,7 +120,6 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             bestX = localBestX;
             bestScore = localBestScore;
             currentDepth++;
-            std::cout << "Depth reached: " << currentDepth - 1 << std::endl;
         }
         else
             break;
@@ -130,9 +129,9 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
 
     if (bestY != -1 && bestX != -1) {
         board[bestY][bestX] = iaCell;
-        return {bestY, bestX, bestScore, iaElapsedMs, true};
+        return {bestY, bestX, bestScore, currentDepth, iaElapsedMs, true};
     }
-    return {-1, -1, 0, iaElapsedMs, false};
+    return {-1, -1, 0, currentDepth, iaElapsedMs, false};
 }
 
 Agent::Result Agent::playHint(std::vector<std::vector<Cell>>& board, Cell playerCell) {
@@ -175,7 +174,7 @@ Agent::Result Agent::playHint(std::vector<std::vector<Cell>>& board, Cell player
             auto [winY, winX, winScore] = win_scored.front();
             auto iaNow = std::chrono::high_resolution_clock::now();
             float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
-            return {winY, winX, 10000000, iaElapsedMs, true};
+            return {winY, winX, winScore, currentDepth, iaElapsedMs, true};
         }
 
         int opponent = (playerCell == 1 ? 2 : 1);
@@ -261,7 +260,7 @@ Agent::Result Agent::playHint(std::vector<std::vector<Cell>>& board, Cell player
     float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
 
     if (bestY != -1 && bestX != -1) {
-        return {bestY, bestX, bestScore, iaElapsedMs, true};
+        return {bestY, bestX, bestScore, currentDepth, iaElapsedMs, true};
     }
-    return {-1, -1, 0, iaElapsedMs, false};
+    return {-1, -1, 0, currentDepth, iaElapsedMs, false};
 }
