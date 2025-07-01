@@ -171,12 +171,6 @@ std::vector<std::pair<int, int>> simulate_capture(std::vector<std::vector<int>>&
     return captured_positions;
 }
 
-int moves_to_keep(int depth) {
-    if (depth >= 3) return 4;
-    if (depth == 2) return 6;
-    return 8;
-}
-
 int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta, bool maximizingPlayer, int player, int currentPlayer, std::chrono::high_resolution_clock::time_point startTime, float maxTimeMs, bool& timeout, int my_captures, int opp_captures) {
     auto now = std::chrono::high_resolution_clock::now();
     float elapsed = std::chrono::duration<float, std::milli>(now - startTime).count();
@@ -192,6 +186,8 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     auto threats = detect_immediate_threats(board, opponent);
     if (!threats.empty())
         return maximizingPlayer ? -9000000 : 9000000;
+
+
 
     auto free_fours = detect_free_fours(board, currentPlayer);
     if (!free_fours.empty())
@@ -227,8 +223,7 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
         });
 
     moves.clear();
-    int keep = moves_to_keep(depth);
-    for (size_t i = 0; i < move_scores.size() && i < (size_t)keep; ++i)
+    for (size_t i = 0; i < move_scores.size() && i < 6; ++i)
         moves.emplace_back(std::get<0>(move_scores[i]), std::get<1>(move_scores[i]));
 
     if (maximizingPlayer) {

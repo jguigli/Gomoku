@@ -24,25 +24,29 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
         int opp_captures = _blackStone.getPairCaptured();
         int localBestY = bestY, localBestX = bestX, localBestScore = bestScore;
         auto moves = generate_moves(intBoard, iaCell);
-        // std::cout << "Generated moves: " << std::endl;
-        // for (const auto& move : moves) {
-        //     std::cout << "(" << move.first << ", " << move.second << ") ";
-        // }
-        // std::cout << std::endl;
         auto wins = detect_immediate_wins(intBoard, iaCell);
-        if (!wins.empty()) {
-            // std::cout << "Immediate win detected" << std::endl;
-            // for (const auto& pos : wins)
-            //     std::cout << "Win by agent at: (" << pos.first << ", " << pos.second << ")" << std::endl;
-            auto [winY, winX] = *wins.begin();
-            board[winY][winX] = iaCell;
-            auto iaNow = std::chrono::high_resolution_clock::now();
-            float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
-            return {winY, winX, 10000000, iaElapsedMs, true};
-        }
 
         int opponent = (iaCell == 1 ? 2 : 1);
         auto threats = detect_immediate_threats(intBoard, opponent);
+        
+        if (!wins.empty()) {
+            int my_captures = (iaCell == CELL_BLACK) ? _blackStone.getPairCaptured() : _whiteStone.getPairCaptured();
+            int opp_captures = (iaCell == CELL_BLACK) ? _whiteStone.getPairCaptured() : _blackStone.getPairCaptured();
+            std::vector<std::tuple<int, int, int>> win_scored;
+            for (const auto& [winY, winX] : wins) {
+                int score = move_priority(intBoard, winY, winX, iaCell, my_captures, opp_captures);
+                win_scored.emplace_back(winY, winX, score);
+            }
+            std::sort(win_scored.begin(), win_scored.end(),
+                [](const auto& a, const auto& b) {
+                    return std::get<2>(a) > std::get<2>(b);
+                });
+            auto [winY, winX, winScore] = win_scored.front();
+            auto iaNow = std::chrono::high_resolution_clock::now();
+            float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
+            return {winY, winX, winScore, iaElapsedMs, true};
+        }
+
 
         if (!threats.empty()) {
             std::vector<std::pair<int, int>> threat_moves;
@@ -53,7 +57,6 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             if (!threat_moves.empty())
                 moves = threat_moves;
         }
-
 
         auto free_fours = detect_free_fours(intBoard, iaCell);
         if (!free_fours.empty()) {
@@ -93,8 +96,8 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
         moves.clear();
         for (auto& tup : move_scores)
             moves.emplace_back(std::get<0>(tup), std::get<1>(tup));
-        if (moves.size() > 8)
-            moves.resize(8);
+        if (moves.size() > 6)
+            moves.resize(6);
 
         for (auto [y, x] : moves) {
             intBoard[y][x] = iaCell;
@@ -158,7 +161,18 @@ Agent::Result Agent::playHint(std::vector<std::vector<Cell>>& board, Cell player
 
         auto wins = detect_immediate_wins(intBoard, playerCell);
         if (!wins.empty()) {
-            auto [winY, winX] = *wins.begin();
+            int my_captures = (playerCell == CELL_BLACK) ? _blackStone.getPairCaptured() : _whiteStone.getPairCaptured();
+            int opp_captures = (playerCell == CELL_BLACK) ? _whiteStone.getPairCaptured() : _blackStone.getPairCaptured();
+            std::vector<std::tuple<int, int, int>> win_scored;
+            for (const auto& [winY, winX] : wins) {
+                int score = move_priority(intBoard, winY, winX, playerCell, my_captures, opp_captures);
+                win_scored.emplace_back(winY, winX, score);
+            }
+            std::sort(win_scored.begin(), win_scored.end(),
+                [](const auto& a, const auto& b) {
+                    return std::get<2>(a) > std::get<2>(b);
+                });
+            auto [winY, winX, winScore] = win_scored.front();
             auto iaNow = std::chrono::high_resolution_clock::now();
             float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
             return {winY, winX, 10000000, iaElapsedMs, true};
@@ -215,8 +229,8 @@ Agent::Result Agent::playHint(std::vector<std::vector<Cell>>& board, Cell player
         moves.clear();
         for (auto& tup : move_scores)
             moves.emplace_back(std::get<0>(tup), std::get<1>(tup));
-        if (moves.size() > 7)
-            moves.resize(7);
+        if (moves.size() > 6)
+            moves.resize(6);
 
         for (auto [y, x] : moves) {
             intBoard[y][x] = playerCell;

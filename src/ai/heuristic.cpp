@@ -212,9 +212,9 @@ std::set<std::pair<int, int>> detect_immediate_wins(const std::vector<std::vecto
                     }
                 }
             }
-
-            if (checkCapturePair(board, x, y, player))
+            if (checkCapturePair(board, x, y, player)) {
                 wins.insert({y, x});
+            }
         }
     }
     return wins;
