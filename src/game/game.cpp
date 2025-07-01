@@ -1,7 +1,7 @@
 #include "../../includes/game.hpp"
 
 
-Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(PLAYER_VS_PLAYER), _difficulty(NORMAL), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false), _roundNumber(1)
+Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(PLAYER_VS_PLAYER), _difficulty(NORMAL), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false), _roundNumber(1), _lastMove(false)
 {
     _resetButton = { BOARD_WIDTH / 2 - 120, BOARD_HEIGHT - 25, 100, 40 };
     _menuButton = { BOARD_WIDTH / 2, BOARD_HEIGHT - 25, 100, 40 };
@@ -13,7 +13,7 @@ Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE
     _turnStartTime = std::chrono::high_resolution_clock::now();
 }
 
-Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(gameMode), _difficulty(difficulty), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false), _roundNumber(1)
+Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(gameMode), _difficulty(difficulty), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false), _roundNumber(1), _lastMove(false)
 {
     _resetButton = { BOARD_WIDTH / 2 - 120, BOARD_HEIGHT - 25, 100, 40 };
     _menuButton = { BOARD_WIDTH / 2, BOARD_HEIGHT - 25, 100, 40 };
@@ -64,22 +64,18 @@ void Game::navigateToMove(int moveIndex)
     
     _currentMoveIndex = moveIndex;
     
-    // Reconstruct review board state up to the specified move
     _reviewBoard.reset();
     
-    if (moveIndex == static_cast<int>(_moveHistory.size()) - 1) {
+    if (moveIndex == static_cast<int>(_moveHistory.size()) - 1)
         exitReviewMode();
-    }
-    
-    // Replay all moves up to the specified index
-    for (int i = 0; i <= moveIndex; i++) {
+
+    for (int i = 0; i <= moveIndex; i++)
+    {
         Move& move = _moveHistory[i];
         _reviewBoard.setCell(move.x, move.y, move.stone);
         
-        // Remove captured stones for this move
-        for (const auto& capturedPos : move.capturedStones) {
+        for (const auto& capturedPos : move.capturedStones)
             _reviewBoard.emptyCell(capturedPos.first, capturedPos.second);
-        }
     }
     
 }
@@ -108,6 +104,7 @@ void Game::reset()
     _gameOver = false;
     _roundNumber = 1;
     _turnStartTime = std::chrono::high_resolution_clock::now();
+    _lastMove = false;
 }
 
 bool Game::checkFiveStonesAligned(int x, int y, Player& stone)
@@ -119,8 +116,16 @@ bool Game::checkFiveStonesAligned(int x, int y, Player& stone)
         {1, -1}
     };
 
+    Move initialMove;
+    initialMove.x = x;
+    initialMove.y = y;
+    initialMove.stone = stone.getStoneColor();
+
+    
     for (auto& dir : directions)
     {
+        _lastFiveStonesAligned.clear();
+        _lastFiveStonesAligned.push_back(initialMove);
         int count = 1;
 
         for (int i = 1; i < 5; ++i)
@@ -128,7 +133,14 @@ bool Game::checkFiveStonesAligned(int x, int y, Player& stone)
             int nx = x + dir[0] * i;
             int ny = y + dir[1] * i;
             if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == stone.getStoneColor())
+            {
+                Move newMove;
+                newMove.x = nx;
+                newMove.y = ny;
+                newMove.stone = stone.getStoneColor();
+                _lastFiveStonesAligned.push_back(newMove);
                 count++;
+            }
             else
                 break;
         }
@@ -138,7 +150,14 @@ bool Game::checkFiveStonesAligned(int x, int y, Player& stone)
             int nx = x - dir[0] * i;
             int ny = y - dir[1] * i;
             if (_board.isInsideGrid(nx, ny) && _board.getCell(nx, ny) == stone.getStoneColor())
+            {
+                Move newMove;
+                newMove.x = nx;
+                newMove.y = ny;
+                newMove.stone = stone.getStoneColor();
+                _lastFiveStonesAligned.push_back(newMove);
                 count++;
+            }
             else
                 break;
         }
@@ -149,6 +168,20 @@ bool Game::checkFiveStonesAligned(int x, int y, Player& stone)
     return false;
 }
 
+bool Game::checkLastFiveStonesAligned()
+{
+    if (_lastFiveStonesAligned.empty())
+        return false;
+    
+    int stonesStillAligned = 0;
+    for (const auto& move : _lastFiveStonesAligned)
+    {
+        if (_board.getCell(move.x, move.y) == move.stone)
+            stonesStillAligned++;
+    }
+    
+    return stonesStillAligned >= 5;
+}
 
 bool Game::checkCapturePair(int x, int y, Player& stone)
 {
@@ -423,15 +456,31 @@ void Game::update()
                     addMoveToHistory(x, y, currentPlayer.getStoneColor());
                 }
 
+                if (_lastMove && !_gameOver)
+                {
+                    if (checkLastFiveStonesAligned())
+                    {
+                        _gameOver = true;
+                        // _blackTurn = !_blackTurn;
+                        return;
+                    }
+                    else
+                        _lastMove = false;
+                }
+
                 auto now = std::chrono::high_resolution_clock::now();
                 _elapsedMs = std::chrono::duration<float, std::milli>(now - _turnStartTime).count();
                 _turnStartTime = now;
                 if (checkFiveStonesAligned(x, y, currentPlayer))
-                    _gameOver = true;
+                    _lastMove = true;
+                
                 if (currentPlayer.getPairCaptured() >= 5)
                     _gameOver = true;
+
                 _blackTurn = !_blackTurn;
-                if (_blackTurn) _roundNumber++;
+
+                if (_blackTurn)
+                    _roundNumber++;
                 return;
             }
             if (handlePlayerMove(x, y, currentPlayer))
@@ -442,25 +491,33 @@ void Game::update()
                 } else {
                     addMoveToHistory(x, y, currentPlayer.getStoneColor());
                 }
+
+                if (_lastMove && !_gameOver)
+                {
+                    if (checkLastFiveStonesAligned())
+                    {
+                        _gameOver = true;
+                        return;
+                    }
+                    else
+                        _lastMove = false;
+                }
                 
                 auto now = std::chrono::high_resolution_clock::now();
                 _elapsedMs = std::chrono::duration<float, std::milli>(now - _turnStartTime).count();
                 _turnStartTime = now;
                 std::cout << "Human player took : " << (int)_elapsedMs << " ms to play" << std::endl;
                 if (checkFiveStonesAligned(x, y, currentPlayer))
-                {
-                    std::cout << "GAME OVER" << std::endl;
-                    _gameOver = true;
-                }
+                    _lastMove = true;
+                
                 if (currentPlayer.getPairCaptured() >= 5)
-                {
-                    std::cout << "GAME OVER" << std::endl;
                     _gameOver = true;
-                }
+                
                 if (_hintActive) {
                     _hintActive = false;
                     _hintX = _hintY = -1;
                 }
+                
                 _blackTurn = !_blackTurn;
                 
                 if (_blackTurn) {
@@ -491,17 +548,25 @@ void Game::update()
             } else {
                 addMoveToHistory(result.x, result.y, CELL_WHITE);
             }
+
+            if (_lastMove && !_gameOver)
+            {
+                if (checkLastFiveStonesAligned())
+                {
+                    _gameOver = true;
+                    return;
+                }
+                else
+                    _lastMove = false;
+
+            }
             
             if (checkFiveStonesAligned(result.x, result.y, _whiteStone))
-            {
-                std::cout << "GAME OVER" << std::endl;
-                _gameOver = true;
-            }
+                _lastMove = true;
+
             if (_whiteStone.getPairCaptured() >= 5)
-            {
-                std::cout << "GAME OVER" << std::endl;
                 _gameOver = true;
-            }
+            
             _blackTurn = !_blackTurn;
             
             _roundNumber++;
@@ -721,11 +786,12 @@ void Game::render()
     {
         _board.drawBoard();
         _board.drawPieces();
-        if (_hintActive && _hintX >= 0 && _hintY >= 0) {
+        if (_hintActive && _hintX >= 0 && _hintY >= 0)
+        {
             int drawX = BOARD_MARGIN + _hintX * CELL_SIZE;
             int drawY = BOARD_MARGIN + _hintY * CELL_SIZE;
             DrawCircle(drawX, drawY, CELL_SIZE / 2 - 4, DARKGREEN);
-}
+        }
     }
     
     drawMoveHighlight();

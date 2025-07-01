@@ -62,12 +62,16 @@ class Game
 		int _currentMoveIndex;
 		bool _reviewMode;
 		int _roundNumber;
+
+		bool _lastMove;
+		std::vector<Move> _lastFiveStonesAligned;
 		
 		void addMoveToHistory(int x, int y, Cell stone, const std::vector<std::pair<int, int>>& capturedStones = {});
 		void navigateToMove(int moveIndex);
 		void drawMoveHighlight();
 		void enterReviewMode();
 		void exitReviewMode();
+		bool checkLastFiveStonesAligned();
 		
 	public:
 		bool shouldReturnToMenu() const { return _backToMenu; }
