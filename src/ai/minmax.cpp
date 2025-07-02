@@ -187,8 +187,6 @@ int minimax(std::vector<std::vector<int>>& board, int depth, int alpha, int beta
     if (!threats.empty())
         return maximizingPlayer ? -9000000 : 9000000;
 
-
-
     auto free_fours = detect_free_fours(board, currentPlayer);
     if (!free_fours.empty())
         return maximizingPlayer ? 8000000 : -8000000;

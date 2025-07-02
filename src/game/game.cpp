@@ -11,6 +11,7 @@ Game::Game() : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE
     _agent = new Agent(static_cast<int>(_difficulty), CELL_WHITE, _blackStone, _whiteStone);
     _turnStartTime = std::chrono::high_resolution_clock::now();
     _lastAgentResult.depthReached = 0;
+    _gameOver = false;
 }
 
 Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackStone(CELL_BLACK), _whiteStone(CELL_WHITE), _agent(nullptr), _agentActive(false), _gameMode(gameMode), _difficulty(difficulty), _backToMenu(false), _currentMoveIndex(-1), _reviewMode(false), _roundNumber(1), _lastMove(false)
@@ -24,6 +25,7 @@ Game::Game(GameMode gameMode, Difficulty difficulty) : _blackTurn(true), _blackS
     _agentActive = (gameMode == PLAYER_VS_AI);
     _turnStartTime = std::chrono::high_resolution_clock::now();
     _lastAgentResult.depthReached = 0;
+    _gameOver = false;
 }
 
 Game::~Game() {

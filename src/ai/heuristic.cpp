@@ -283,6 +283,150 @@ std::set<std::pair<int, int>> detect_immediate_threats(const std::vector<std::ve
     return threats;
 }
 
+ImmediateMoves detect_immediate_moves(const std::vector<std::vector<int>>& board, int player) {
+    int SIZE = board.size();
+    int opponent = (player == 1 ? 2 : 1);
+    std::vector<std::pair<int, int>> directions = {{1,0},{0,1},{1,1},{-1,1}};
+
+    std::vector<std::vector<int>> win_patterns = {
+        {0, player, player, player, player},
+        {player, 0, player, player, player},
+        {player, player, 0, player, player},
+        {player, player, player, 0, player},
+        {player, player, player, player, 0}
+    };
+
+
+    std::vector<std::vector<int>> free_four_patterns = {
+        {0, player, player, player, 0},
+        {player, 0, player, player, 0},
+        {player, player, 0, player, 0},
+    };
+
+    std::vector<std::vector<int>> threat_patterns = {
+        {0, opponent, 0, opponent, opponent, 0},
+        {0, opponent, opponent, 0, opponent, 0},
+        {0, opponent, opponent, opponent, 0},
+        {opponent, opponent, opponent, opponent, 0},
+        {player, opponent, opponent, opponent, opponent, 0},
+        {0, opponent, opponent, opponent, opponent, player},
+        {0, opponent, opponent, opponent, opponent},
+        {0, opponent, opponent, opponent, opponent, 0},
+        {opponent, 0, opponent, opponent, opponent},
+        {opponent, opponent, 0, opponent, opponent},
+        {opponent, opponent, opponent, 0, opponent},
+        {opponent, opponent, opponent, opponent, opponent}
+    };
+
+    ImmediateMoves result;
+
+    for (int y = 0; y < SIZE; ++y) {
+        for (int x = 0; x < SIZE; ++x) {
+            if (board[y][x] != 0)
+                continue;
+
+            for (auto [dx, dy] : directions) {
+                for (const auto& pat : win_patterns) {
+                    int len = pat.size();
+                    int empty_y = -1, empty_x = -1;
+                    bool match = true;
+                    for (int k = 0; k < len; ++k) {
+                        int nx = x + dx * k;
+                        int ny = y + dy * k;
+                        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+                            match = false;
+                            break;
+                        }
+                        int cell = board[ny][nx];
+                        if (pat[k] == 0) {
+                            if (cell == 0) {
+                                empty_y = ny;
+                                empty_x = nx;
+                            } else {
+                                match = false;
+                                break;
+                            }
+                        } else if (cell != pat[k]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match && empty_y != -1 && empty_x != -1) {
+                        result.wins.insert({empty_y, empty_x});
+                    }
+                }
+            }
+
+            if (checkCapturePair(board, x, y, player))
+                result.captures.insert({y, x});
+
+            for (auto [dx, dy] : directions) {
+                for (const auto& pat : threat_patterns) {
+                    int len = pat.size();
+                    std::vector<std::pair<int, int>> empty_spots;
+                    bool match = true;
+                    for (int k = 0; k < len; ++k) {
+                        int nx = x + dx * k;
+                        int ny = y + dy * k;
+                        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+                            match = false;
+                            break;
+                        }
+                        int cell = board[ny][nx];
+                        if (pat[k] == 0) {
+                            if (cell == 0)
+                                empty_spots.push_back({ny, nx});
+                            else {
+                                match = false;
+                                break;
+                            }
+                        } else if (pat[k] == opponent) {
+                            if (cell != opponent) {
+                                match = false;
+                                break;
+                            }
+                        } else {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match && !empty_spots.empty()) {
+                        for (auto pos : empty_spots)
+                            result.threats.insert(pos);
+                    }
+                }
+            }
+
+            if (checkCapturePair(board, x, y, opponent))
+                result.captures_threats.insert({y, x});
+
+            for (auto [dx, dy] : directions) {
+                std::vector<int> pattern = {0, player, player, player, player, 0};
+                for (int offset = -5; offset <= 0; ++offset) {
+                    bool match = true;
+                    for (int k = 0; k < 6; ++k) {
+                        int nx = x + (offset + k) * dx;
+                        int ny = y + (offset + k) * dy;
+                        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+                            match = false;
+                            break;
+                        }
+                        int cell = (nx == x && ny == y) ? player : board[ny][nx];
+                        if (cell != pattern[k]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        result.free_fours.insert({y, x});
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
 
 bool is_crossed_free_three_and_four(const std::vector<std::vector<int>>& board, int y, int x, int player) {
     if (board[y][x] != 0)

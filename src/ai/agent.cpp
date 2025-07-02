@@ -57,6 +57,57 @@ Agent::Result Agent::play(std::vector<std::vector<Cell>>& board) {
             if (!threat_moves.empty())
                 moves = threat_moves;
         }
+        // ImmediateMoves imm = detect_immediate_moves(intBoard, iaCell);
+
+        // if (!imm.wins.empty()) {
+        //     auto [winY, winX] = *imm.wins.begin();
+        //     auto iaNow = std::chrono::high_resolution_clock::now();
+        //     float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
+        //     std::cout << "Win detected at (" << winY << ", " << winX << ")" << std::endl;
+        //     return {winY, winX, 10000000, currentDepth, iaElapsedMs, true};
+        // }
+
+        // if (!imm.threats.empty()) {
+        //     auto [threatsY, threatsX] = *imm.threats.begin();
+        //     auto iaNow = std::chrono::high_resolution_clock::now();
+        //     float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
+        //     std::cout << "Threat detected at (" << threatsY << ", " << threatsX << ")" << std::endl;
+        //     return {threatsY, threatsX, -10000000, currentDepth, iaElapsedMs, true};
+        // }
+
+        // if (!imm.free_fours.empty()) {
+        //     auto [ffY, ffX] = *imm.free_fours.begin();
+        //     auto iaNow = std::chrono::high_resolution_clock::now();
+        //     float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
+        //     std::cout << "Free four detected at (" << ffY << ", " << ffX << ")" << std::endl;
+        //     return {ffY, ffX, 9000000, currentDepth, iaElapsedMs, true};
+        // }
+
+        // if (!imm.captures.empty() && (imm.captures_threats.empty() || opp_captures <= 4)) {
+        //     std::vector<std::tuple<int, int, int>> cap_scored;
+        //     for (const auto& [capY, capX] : imm.captures) {
+        //         int score = move_priority(intBoard, capY, capX, iaCell, my_captures, opp_captures);
+        //         cap_scored.emplace_back(capY, capX, score);
+        //     }
+        //     std::sort(cap_scored.begin(), cap_scored.end(),
+        //         [](const auto& a, const auto& b) {
+        //             return std::get<2>(a) > std::get<2>(b);
+        //         });
+        //     auto [capY, capX, capScore] = cap_scored.front();
+        //     auto iaNow = std::chrono::high_resolution_clock::now();
+        //     float iaElapsedMs = std::chrono::duration<float, std::milli>(iaNow - turnStart).count();
+        //     return {capY, capX, capScore, currentDepth, iaElapsedMs, true};
+        // }
+
+        // std::set<std::pair<int, int>> combined_threats = imm.threats;
+        // combined_threats.insert(imm.captures_threats.begin(), imm.captures_threats.end());
+        // std::vector<std::pair<int, int>> threat_moves;
+        // for (auto& move : moves) {
+        //     if (combined_threats.count(move))
+        //         threat_moves.push_back(move);
+        // }
+        // if (!threat_moves.empty())
+        //     moves = threat_moves;
 
         auto free_fours = detect_free_fours(intBoard, iaCell);
         if (!free_fours.empty()) {
