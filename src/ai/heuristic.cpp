@@ -212,9 +212,6 @@ std::set<std::pair<int, int>> detect_immediate_wins(const std::vector<std::vecto
                     }
                 }
             }
-            if (checkCapturePair(board, x, y, player)) {
-                wins.insert({y, x});
-            }
         }
     }
     return wins;
@@ -303,19 +300,20 @@ ImmediateMoves detect_immediate_moves(const std::vector<std::vector<int>>& board
         {player, player, 0, player, 0},
     };
 
-    std::vector<std::vector<int>> threat_patterns = {
-        {0, opponent, 0, opponent, opponent, 0},
-        {0, opponent, opponent, 0, opponent, 0},
-        {0, opponent, opponent, opponent, 0},
+    std::vector<std::vector<int>> ff_threat_patterns = {
         {opponent, opponent, opponent, opponent, 0},
-        {player, opponent, opponent, opponent, opponent, 0},
-        {0, opponent, opponent, opponent, opponent, player},
         {0, opponent, opponent, opponent, opponent},
         {0, opponent, opponent, opponent, opponent, 0},
         {opponent, 0, opponent, opponent, opponent},
         {opponent, opponent, 0, opponent, opponent},
         {opponent, opponent, opponent, 0, opponent},
         {opponent, opponent, opponent, opponent, opponent}
+    };
+
+    std::vector<std::vector<int>> ft_threat_patterns = {
+        {0, opponent, 0, opponent, opponent, 0},
+        {0, opponent, opponent, 0, opponent, 0},
+        {0, opponent, opponent, opponent, 0}
     };
 
     ImmediateMoves result;
@@ -361,7 +359,7 @@ ImmediateMoves detect_immediate_moves(const std::vector<std::vector<int>>& board
                 result.captures.insert({y, x});
 
             for (auto [dx, dy] : directions) {
-                for (const auto& pat : threat_patterns) {
+                for (const auto& pat : ff_threat_patterns) {
                     int len = pat.size();
                     std::vector<std::pair<int, int>> empty_spots;
                     bool match = true;
@@ -380,19 +378,49 @@ ImmediateMoves detect_immediate_moves(const std::vector<std::vector<int>>& board
                                 match = false;
                                 break;
                             }
-                        } else if (pat[k] == opponent) {
-                            if (cell != opponent) {
+                        } else if (cell != opponent) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match && !empty_spots.empty()) {
+                        if (len == 6 && empty_spots.size() == 2)
+                            for (auto pos : empty_spots)
+                                result.ff_threats.insert(pos);
+                        else if (len == 5 && empty_spots.size() == 1)
+                            result.ff_threats.insert(empty_spots[0]);
+                    }
+                }
+            }
+
+            for (auto [dx, dy] : directions) {
+                for (const auto& pat : ft_threat_patterns) {
+                    int len = pat.size();
+                    std::vector<std::pair<int, int>> empty_spots;
+                    bool match = true;
+                    for (int k = 0; k < len; ++k) {
+                        int nx = x + dx * k;
+                        int ny = y + dy * k;
+                        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) {
+                            match = false;
+                            break;
+                        }
+                        int cell = board[ny][nx];
+                        if (pat[k] == 0) {
+                            if (cell == 0)
+                                empty_spots.push_back({ny, nx});
+                            else {
                                 match = false;
                                 break;
                             }
-                        } else {
+                        } else if (cell != opponent) {
                             match = false;
                             break;
                         }
                     }
                     if (match && !empty_spots.empty()) {
                         for (auto pos : empty_spots)
-                            result.threats.insert(pos);
+                            result.ft_threats.insert(pos);
                     }
                 }
             }

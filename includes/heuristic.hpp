@@ -11,7 +11,8 @@
 struct ImmediateMoves {
     std::set<std::pair<int, int>> wins;
     std::set<std::pair<int, int>> captures;
-    std::set<std::pair<int, int>> threats;
+    std::set<std::pair<int, int>> ff_threats;
+    std::set<std::pair<int, int>> ft_threats;
     std::set<std::pair<int, int>> captures_threats;
     std::set<std::pair<int, int>> free_fours;
 };
