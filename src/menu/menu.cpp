@@ -8,8 +8,8 @@ Menu::Menu() : _menuState(MENU_MAIN), _gameMode(PLAYER_VS_PLAYER), _difficulty(N
 Menu::~Menu() {
 }
 
-void Menu::initButtons() {
-    // Main menu buttons
+void Menu::initButtons()
+{
     float buttonWidth = 300;
     float buttonHeight = 60;
     float centerX = SCREEN_WIDTH / 2 - buttonWidth / 2;
@@ -18,7 +18,6 @@ void Menu::initButtons() {
     _pvpButton = { centerX, startY, buttonWidth, buttonHeight };
     _pvaButton = { centerX, startY + 80, buttonWidth, buttonHeight };
     
-    // Difficulty buttons
     float diffButtonWidth = 200;
     float diffButtonHeight = 50;
     float diffCenterX = SCREEN_WIDTH / 2 - diffButtonWidth / 2;
@@ -28,65 +27,75 @@ void Menu::initButtons() {
     _normalButton = { diffCenterX, diffStartY + 70, diffButtonWidth, diffButtonHeight };
     _hardButton = { diffCenterX, diffStartY + 140, diffButtonWidth, diffButtonHeight };
     
-    // Back button
     _backButton = { 50, SCREEN_HEIGHT - 80, 100, 40 };
 }
 
-void Menu::update() {
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        switch (_menuState) {
+void Menu::update()
+{
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        switch (_menuState)
+        {
             case MENU_MAIN:
-                if (isButtonClicked(_pvpButton)) {
+                if (isButtonClicked(_pvpButton))
+                {
                     _gameMode = PLAYER_VS_PLAYER;
                     _startGame = true;
                     _menuState = GAME_PLAYING;
-                } else if (isButtonClicked(_pvaButton)) {
+                }
+                else if (isButtonClicked(_pvaButton))
+                {
                     _gameMode = PLAYER_VS_AI;
                     _menuState = MENU_DIFFICULTY;
                 }
                 break;
                 
             case MENU_DIFFICULTY:
-                if (isButtonClicked(_beginnerButton)) {
+                if (isButtonClicked(_beginnerButton))
+                {
                     _difficulty = BEGINNER;
                     _startGame = true;
                     _menuState = GAME_PLAYING;
-                } else if (isButtonClicked(_normalButton)) {
+                }
+                else if (isButtonClicked(_normalButton))
+                {
                     _difficulty = NORMAL;
                     _startGame = true;
                     _menuState = GAME_PLAYING;
-                } else if (isButtonClicked(_hardButton)) {
+                }
+                else if (isButtonClicked(_hardButton))
+                {
                     _difficulty = HARD;
                     _startGame = true;
                     _menuState = GAME_PLAYING;
-                } else if (isButtonClicked(_backButton)) {
+                } else if (isButtonClicked(_backButton))
+                {
                     _menuState = MENU_MAIN;
                 }
                 break;
                 
             case GAME_PLAYING:
-                // Game is running, menu is not active
                 break;
         }
     }
     
-    // ESC key to go back or reset to main menu
-    if (IsKeyPressed(KEY_ESCAPE)) {
-        if (_menuState == MENU_DIFFICULTY) {
+    if (IsKeyPressed(KEY_ESCAPE))
+    {
+        if (_menuState == MENU_DIFFICULTY)
             _menuState = MENU_MAIN;
-        } else if (_menuState == GAME_PLAYING) {
+        else if (_menuState == GAME_PLAYING)
             _menuState = MENU_MAIN;
-        }
     }
 }
 
-void Menu::render() {
+void Menu::render()
+{
     BeginDrawing();
-    ClearBackground(Color{45, 45, 55, 255}); // Dark background
+    ClearBackground(Color{45, 45, 55, 255});
     
-    switch (_menuState) {
+    switch (_menuState)
+    {
         case MENU_MAIN:
-            // Title
             {
                 const char* title = "GOMOKU";
                 int titleFontSize = 72;
@@ -94,7 +103,6 @@ void Menu::render() {
                 DrawText(title, SCREEN_WIDTH / 2 - titleWidth / 2, 150, titleFontSize, GOLD);
             }
             
-            // Subtitle
             {
                 const char* subtitle = "Select Game Mode";
                 int subtitleFontSize = 32;
@@ -102,13 +110,11 @@ void Menu::render() {
                 DrawText(subtitle, SCREEN_WIDTH / 2 - subtitleWidth / 2, 250, subtitleFontSize, LIGHTGRAY);
             }
             
-            // Buttons
             drawButton(_pvpButton, "Player vs Player", DARKBLUE, WHITE);
             drawButton(_pvaButton, "Player vs AI", DARKGREEN, WHITE);
             break;
             
         case MENU_DIFFICULTY:
-            // Title
             {
                 const char* title = "Select Difficulty";
                 int titleFontSize = 48;
@@ -116,12 +122,10 @@ void Menu::render() {
                 DrawText(title, SCREEN_WIDTH / 2 - titleWidth / 2, 200, titleFontSize, GOLD);
             }
             
-            // Difficulty buttons
             drawButton(_beginnerButton, "Beginner", DARKGREEN, WHITE);
             drawButton(_normalButton, "Normal", ORANGE, WHITE);
             drawButton(_hardButton, "Hard", MAROON, WHITE);
             
-            // Back button
             drawButton(_backButton, "Back", GRAY, WHITE);
             break;
             
@@ -133,11 +137,11 @@ void Menu::render() {
     EndDrawing();
 }
 
-void Menu::drawButton(Rectangle button, const char* text, Color bgColor, Color textColor) {
+void Menu::drawButton(Rectangle button, const char* text, Color bgColor, Color textColor)
+{
     Vector2 mousePos = GetMousePosition();
     bool isHovered = CheckCollisionPointRec(mousePos, button);
     
-    // Button background with hover effect - fix color narrowing with proper casting
     Color buttonColor = isHovered ? 
         Color{
             static_cast<unsigned char>(bgColor.r + 30 > 255 ? 255 : bgColor.r + 30), 
@@ -149,7 +153,6 @@ void Menu::drawButton(Rectangle button, const char* text, Color bgColor, Color t
     DrawRectangleRec(button, buttonColor);
     DrawRectangleLinesEx(button, 2, isHovered ? WHITE : LIGHTGRAY);
     
-    // Button text
     int fontSize = 24;
     int textWidth = MeasureText(text, fontSize);
     int textHeight = fontSize;
@@ -159,12 +162,14 @@ void Menu::drawButton(Rectangle button, const char* text, Color bgColor, Color t
     DrawText(text, textX, textY, fontSize, textColor);
 }
 
-bool Menu::isButtonClicked(Rectangle button) {
+bool Menu::isButtonClicked(Rectangle button)
+{
     Vector2 mousePos = GetMousePosition();
     return CheckCollisionPointRec(mousePos, button);
 }
 
-void Menu::reset() {
+void Menu::reset()
+{
     _menuState = MENU_MAIN;
     _gameMode = PLAYER_VS_PLAYER;
     _difficulty = NORMAL;

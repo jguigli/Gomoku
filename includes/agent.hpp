@@ -4,11 +4,13 @@
 #include "../includes/board.hpp"
 #include <chrono>
 
-class Agent {
+class Agent
+{
     public:
         Agent(int depth, Cell iaCell, Player& _blackStone, Player& _whiteStone);
 
-        struct Result {
+        struct Result
+        {
             int     y;
             int     x;
             int     score;
